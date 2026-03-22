@@ -223,11 +223,43 @@
 </div>
 
 <div class="modal-backdrop hidden" id="presetModal">
-  <div class="modal">
-    <h3>Presets</h3>
+  <div class="modal modal-large">
+    <h3>Presets - Advanced Search & Apply</h3>
+    <!-- Search & Filter Controls -->
+    <div class="preset-controls">
+      <div class="field">
+        <input type="text" id="presetSearch" placeholder="Search presets by name, description, or tags...">
+      </div>
+      <div class="preset-filters">
+        <div class="filter-group">
+          <label>Sort:</label>
+          <select id="presetSort">
+            <option value="alphabetical">Alphabetical</option>
+            <option value="recent">Recently Used</option>
+            <option value="frequency">Most Used</option>
+          </select>
+        </div>
+        <div class="filter-group" id="tagFilters"></div>
+      </div>
+    </div>
     <div id="presetList"></div>
     <div class="modal-actions">
       <button class="btn" id="closePresetModal">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Preset Override Modal -->
+<div class="modal-backdrop hidden" id="presetOverrideModal">
+  <div class="modal">
+    <h3>Apply Preset - Select Fields to Override</h3>
+    <div class="override-explanation">
+      <p>Checked fields will be updated. Unchecked fields will keep their current values.</p>
+    </div>
+    <div id="overrideFieldsList" class="override-fields"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="applyPresetOverride">Apply Preset</button>
+      <button class="btn" id="cancelPresetOverride">Cancel</button>
     </div>
   </div>
 </div>

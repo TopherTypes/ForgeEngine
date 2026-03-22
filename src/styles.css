@@ -696,6 +696,160 @@ body {
 .save-item .si-meta { font-size: 10px; color: var(--ui-text-dim); }
 .save-item .si-actions { display: flex; gap: 4px; }
 
+/* ── PRESETS (Gap 8: Advanced Preset System) ── */
+.modal-large {
+  max-width: 600px;
+  width: 90vw;
+  max-height: 90vh;
+}
+
+.preset-controls {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: var(--ui-bg);
+  border: 1px solid var(--ui-border);
+  border-radius: 4px;
+}
+
+.preset-controls .field { margin-bottom: 12px; }
+.preset-controls .field:last-child { margin-bottom: 0; }
+
+.preset-controls input[type="text"] {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 12px;
+  border: 1px solid var(--ui-border);
+  border-radius: 4px;
+  background: var(--ui-bg);
+  color: var(--ui-text);
+}
+
+.preset-filters {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filter-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 11px;
+}
+
+.filter-group label { font-weight: 500; color: var(--ui-text-dim); }
+.filter-group select {
+  padding: 4px 8px;
+  font-size: 11px;
+  border: 1px solid var(--ui-border);
+  border-radius: 3px;
+  background: var(--ui-bg);
+  color: var(--ui-text);
+}
+
+.tag-filter-button {
+  padding: 4px 10px;
+  font-size: 11px;
+  border: 1px solid var(--ui-border);
+  border-radius: 12px;
+  background: var(--ui-bg);
+  color: var(--ui-text);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tag-filter-button:hover,
+.tag-filter-button.active {
+  border-color: var(--ui-accent);
+  background: var(--ui-accent);
+  color: #111;
+  font-weight: 600;
+}
+
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.preset-card {
+  border: 1px solid var(--ui-border);
+  border-radius: 6px;
+  background: var(--ui-bg);
+  padding: 12px;
+  transition: border-color 0.15s;
+}
+
+.preset-card:hover { border-color: var(--ui-accent); }
+
+.preset-card-header { margin-bottom: 10px; }
+.preset-name { font-size: 12px; font-weight: 600; color: var(--ui-text-bright); margin-bottom: 4px; }
+.preset-desc { font-size: 11px; color: var(--ui-text-dim); line-height: 1.3; }
+
+.preset-meta {
+  margin-bottom: 10px;
+  padding: 8px;
+  background: var(--ui-bg-lighter);
+  border-radius: 3px;
+  font-size: 10px;
+}
+
+.meta-row { color: var(--ui-text-dim); margin-bottom: 3px; line-height: 1.2; }
+.meta-row:last-child { margin-bottom: 0; }
+.meta-label { font-weight: 500; color: var(--ui-text); }
+
+.preset-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.preset-actions .btn-sm {
+  flex: 1;
+  font-size: 10px;
+  padding: 4px 6px;
+}
+
+.override-explanation {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: var(--ui-bg);
+  border: 1px solid var(--ui-border);
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--ui-text-dim);
+}
+
+.override-fields {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: var(--ui-bg);
+  border: 1px solid var(--ui-border);
+  border-radius: 4px;
+}
+
+.override-checkboxes { display: flex; flex-direction: column; gap: 8px; }
+
+.checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 3px;
+  transition: background 0.15s;
+}
+
+.checkbox-label:hover { background: var(--ui-bg-lighter); }
+.checkbox-label input[type="checkbox"] { margin-top: 2px; cursor: pointer; }
+.checkbox-label span { flex: 1; color: var(--ui-text); line-height: 1.4; }
+
 /* ── NOTIFICATION ── */
 .toast {
   position: fixed;
