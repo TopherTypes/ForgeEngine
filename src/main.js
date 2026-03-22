@@ -4,7 +4,7 @@
 
 import { state, setTemplate, setFlavour, setField, setStyle, toggleStamp, setPaper, setInk, setStampColor, applyFlavourDefaults, restoreState } from './state.js';
 import { updatePreview } from './render.js';
-import { buildTemplateGrid, buildSwatches, buildStampGrid, buildStampColorSwatches, buildContentFields, buildSaveModal, buildPresetModal, openSaveModal, closeSaveModal, openLoadModal, closeLoadModal, openPresetModal, closePresetModal } from './ui.js';
+import { buildTemplateGrid, buildSwatches, buildStampGrid, buildStampColorSwatches, buildContentFields, buildSaveModal, buildPresetModal, openSaveModal, closeSaveModal, openLoadModal, closeLoadModal, openPresetModal, closePresetModal, openTemplateHelpModal, closeTemplateHelpModal } from './ui.js';
 import { saveDocument, loadDocuments, loadDocument, deleteDocument, savePreset, loadPresets, loadPreset, deletePreset } from './persistence.js';
 import { exportPrint, exportPNG } from './export.js';
 import { showToast, toggleSwitch } from './utils.js';
@@ -355,6 +355,7 @@ function attachModalListeners() {
   document.getElementById('closeSaveModal')?.addEventListener('click', closeSaveModal);
   document.getElementById('closeLoadModal')?.addEventListener('click', closeLoadModal);
   document.getElementById('closePresetModal')?.addEventListener('click', closePresetModal);
+  document.getElementById('closeTemplateHelpModal')?.addEventListener('click', closeTemplateHelpModal);
 
   // Close modals on backdrop click
   document.getElementById('saveModal')?.addEventListener('click', (e) => {
@@ -365,6 +366,9 @@ function attachModalListeners() {
   });
   document.getElementById('presetModal')?.addEventListener('click', (e) => {
     if (e.target.id === 'presetModal') closePresetModal();
+  });
+  document.getElementById('templateHelpModal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'templateHelpModal') closeTemplateHelpModal();
   });
 
   // Undo/Redo buttons
@@ -378,7 +382,7 @@ function attachModalListeners() {
     redoBtn.addEventListener('click', performRedo);
   }
 
-  // Keyboard shortcuts for undo/redo
+  // Keyboard shortcuts for undo/redo and modal control
   document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
       e.preventDefault();
@@ -387,6 +391,13 @@ function attachModalListeners() {
     if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'z'))) {
       e.preventDefault();
       performRedo();
+    }
+    // Close modals on ESC
+    if (e.key === 'Escape') {
+      const templateHelpModal = document.getElementById('templateHelpModal');
+      if (templateHelpModal && !templateHelpModal.classList.contains('hidden')) {
+        closeTemplateHelpModal();
+      }
     }
   });
 }

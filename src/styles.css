@@ -231,6 +231,53 @@ body {
 .template-card:hover { border-color: var(--ui-accent); color: var(--ui-text-bright); }
 .template-card.active { border-color: var(--ui-accent); background: rgba(124,138,110,0.12); color: var(--ui-text-bright); }
 .template-card .tc-icon { font-size: 20px; margin-bottom: 4px; }
+.template-card { position: relative; }
+.template-card .tc-name { display: block; }
+.template-help-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  background: rgba(124,138,110,0.2);
+  border: 1px solid var(--ui-border);
+  border-radius: 50%;
+  color: var(--ui-text-dim);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: help;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.template-help-btn:hover {
+  background: rgba(124,138,110,0.4);
+  color: var(--ui-text-bright);
+  border-color: var(--ui-accent);
+}
+
+/* ── TEMPLATE HELP MODAL ── */
+.help-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.help-description, .help-use-cases, .help-tip {
+  font-size: 12px;
+  line-height: 1.5;
+}
+.help-use-cases ul {
+  margin: 6px 0 0 20px;
+  padding: 0;
+  list-style: disc;
+}
+.help-use-cases li {
+  margin-bottom: 4px;
+  color: var(--ui-text);
+}
 
 /* ── STAMP CHIPS ── */
 .stamp-grid {

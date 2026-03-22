@@ -5,42 +5,66 @@ export const TEMPLATES = {
   memo: {
     name: 'Internal Memo', icon: '📋',
     fields: ['organisation','department','docRef','date','to','from','subject','body'],
-    layout: 'memo'
+    layout: 'memo',
+    description: 'Office-style communication between departments or staff members',
+    useCases: ['Inter-department updates', 'Staff announcements', 'Policy reminders', 'Informal communications'],
+    quickTip: 'Use for quick communications that stay within an organization'
   },
   incident: {
     name: 'Incident Report', icon: '⚠️',
     fields: ['organisation','department','incidentNumber','date','time','reportingOfficer','location','summary','body','actionTaken'],
-    layout: 'report'
+    layout: 'report',
+    description: 'Formal documentation of an incident or emergency event with investigation details',
+    useCases: ['Security incidents', 'Workplace accidents', 'Emergency responses', 'Field event documentation'],
+    quickTip: 'Use when you need to document something that went wrong with official tone'
   },
   bulletin: {
     name: 'Missing Person', icon: '🔍',
     fields: ['organisation','title','caseNumber','date','description','body','contact'],
-    layout: 'bulletin'
+    layout: 'bulletin',
+    description: 'Public notice format for missing persons, objects, or announcements',
+    useCases: ['Missing persons notices', 'Public alerts', 'Search bulletins', 'Distribution posters'],
+    quickTip: 'Use for public-facing information that needs wide distribution'
   },
   notice: {
     name: 'Official Notice', icon: '📜',
     fields: ['organisation','department','docRef','date','title','body','authority'],
-    layout: 'notice'
+    layout: 'notice',
+    description: 'Formal announcement or directive from institutional authority',
+    useCases: ['Policy announcements', 'Regulatory notices', 'Official declarations', 'Procedural updates'],
+    quickTip: 'Use for formal announcements that come from institutional authority'
   },
   research: {
     name: 'Research Log', icon: '🧪',
     fields: ['organisation','facility','experimentId','date','leadResearcher','clearance','observations','body','warnings'],
-    layout: 'report'
+    layout: 'report',
+    description: 'Scientific documentation of experiments, observations, and research findings',
+    useCases: ['Lab experiment documentation', 'Field observations', 'Classified research logs', 'Scientific discoveries'],
+    quickTip: 'Use for scientific or experimental work with technical observations'
   },
   casefile: {
     name: 'Case File Cover', icon: '📁',
     fields: ['organisation','department','caseNumber','date','subject','status','summary','assignedTo'],
-    layout: 'cover'
+    layout: 'cover',
+    description: 'Cover sheet for case files, dossiers, or investigation folders',
+    useCases: ['Investigation dossiers', 'Criminal case files', 'Personnel files', 'Archival folders'],
+    quickTip: 'Use as the first page or cover of related documents bundled together'
   },
   intake: {
     name: 'Intake Form', icon: '📝',
     fields: ['organisation','department','formNumber','date','subjectName','dob','admittedBy','reason','body'],
-    layout: 'form'
+    layout: 'form',
+    description: 'Administrative intake form for individuals entering a system (hospital, police, etc.)',
+    useCases: ['Hospital admission forms', 'Police intake documents', 'Facility check-in forms', 'Personnel onboarding'],
+    quickTip: 'Use for recording someone\'s entry into an organization or system'
   },
   briefing: {
     name: 'Redacted Briefing', icon: '█▌',
     fields: ['organisation','department','reportCode','date','preparedBy','clearance','body'],
-    layout: 'briefing'
+    layout: 'briefing',
+    description: 'Classified or sensitive document with redacted sections for information protection',
+    useCases: ['Classified briefings', 'Redacted reports', 'Secret memos', 'Declassified documents'],
+    quickTip: 'Use for sensitive information with redactions - marking what cannot be revealed'
   }
 };
 

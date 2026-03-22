@@ -49,18 +49,33 @@ Features 14-20 involve significant architectural changes (multi-page rendering, 
 - Toast notifications show action descriptions (e.g., "↶ Changed template")
 - Stacks clear when loading a saved document (fresh start)
 
-**Next Priority**: Priority 2: Quick Template Library with Descriptions
+**Next Priority**: Priority 3: Document Duplication
 
 ---
 
-### Priority 2: Quick Template Library with Descriptions
+### Priority 2: Quick Template Library with Descriptions ✅ COMPLETED
+**Status**: Completed on 2026-03-22
 **Category**: Enhancement
 **Description**: Expand template grid with hover tooltips showing example use cases and quick-start tips for each template.
 **Rationale**: Reduces user confusion about template selection, especially for new users. Improves onboarding.
 **Effort**: Low
 **Impact**: Medium
 **Target Users**: Beginners
-**Technical Notes**: Add `title` attributes and collapsible help text to template selector grid in ui.js.
+**Implementation Details**:
+- Extended TEMPLATES data structure in constants.js with three new fields per template:
+  - `description`: One-line summary of template purpose
+  - `useCases`: Array of 2-3 realistic use cases for each template
+  - `quickTip`: Brief beginner-friendly guidance
+- Updated buildTemplateGrid() in ui.js to:
+  - Add native HTML `title` attribute for browser tooltips on hover
+  - Render small "?" help icon in top-right corner of each template card
+  - Attach click handler to help icon that opens modal with full template information
+- Created template help modal component with help text display
+- Added CSS styling for help icon, modal, and help content sections
+- Implemented keyboard support: ESC key closes help modal, click-outside closes modal
+- All 8 templates now have helpful descriptions, use cases, and quick tips
+
+**Next Priority**: Priority 3: Document Duplication
 
 ---
 
@@ -264,28 +279,28 @@ Features 14-20 involve significant architectural changes (multi-page rendering, 
 
 ## Feature Prioritization Matrix
 
-| Priority | Feature | Category | Effort | Impact | Target Users |
-|----------|---------|----------|--------|--------|--------------|
-| 1 | Undo/Redo Stack | QoL | Low | High | All |
-| 2 | Template Tips | Enhancement | Low | Medium | Beginners |
-| 3 | Document Clone | QoL | Low | High | Power Users |
-| 4 | Better Presets | Enhancement | Medium | High | Power Users |
-| 5 | More Stamps | Enhancement | Low | Medium | All |
-| 6 | Stamp Colour Picker | Enhancement | Low | Medium | All |
-| 7 | Field Customization | New Feature | Medium | Medium | Power Users |
-| 8 | Handwritten Notes | New Feature | Medium | High | TTRPG/ARG |
-| 9 | Multi-Doc Bundles | New Feature | High | High | ARG/TTRPG |
-| 10 | Better Doc History | QoL | Medium | Medium | Power Users |
-| 11 | Custom Classifications | Enhancement | Low | Medium | Worldbuilders |
-| 12 | JSON Export | New Feature | Low | Medium | All |
-| 13 | Margin Notes | New Feature | Medium | High | Horror/TTRPG |
-| 14 | Real Images | Enhancement | Medium | High | All |
-| 15 | Multi-Page Export | New Feature | High | High | Dossier Users |
-| 16 | Custom Flavours | New Feature | High | High | Worldbuilders |
-| 17 | Redaction Reveal | Enhancement | Medium | Medium | GMs/Storytellers |
-| 18 | Audio Notes | New Feature | Medium | Low | Streamers |
-| 19 | Template Marketplace | Integration | Medium | Medium | Community |
-| 20 | Dark Mode/a11y | QoL | Medium | Medium | All |
+| Priority | Feature | Category | Effort | Impact | Target Users | Status |
+|----------|---------|----------|--------|--------|--------------|--------|
+| 1 | Undo/Redo Stack | QoL | Low | High | All | ✅ |
+| 2 | Template Tips | Enhancement | Low | Medium | Beginners | ✅ |
+| 3 | Document Clone | QoL | Low | High | Power Users | |
+| 4 | Better Presets | Enhancement | Medium | High | Power Users | |
+| 5 | More Stamps | Enhancement | Low | Medium | All | |
+| 6 | Stamp Colour Picker | Enhancement | Low | Medium | All | |
+| 7 | Field Customization | New Feature | Medium | Medium | Power Users | |
+| 8 | Handwritten Notes | New Feature | Medium | High | TTRPG/ARG | |
+| 9 | Multi-Doc Bundles | New Feature | High | High | ARG/TTRPG | |
+| 10 | Better Doc History | QoL | Medium | Medium | Power Users | |
+| 11 | Custom Classifications | Enhancement | Low | Medium | Worldbuilders | |
+| 12 | JSON Export | New Feature | Low | Medium | All | |
+| 13 | Margin Notes | New Feature | Medium | High | Horror/TTRPG | |
+| 14 | Real Images | Enhancement | Medium | High | All | |
+| 15 | Multi-Page Export | New Feature | High | High | Dossier Users | |
+| 16 | Custom Flavours | New Feature | High | High | Worldbuilders | |
+| 17 | Redaction Reveal | Enhancement | Medium | Medium | GMs/Storytellers | |
+| 18 | Audio Notes | New Feature | Medium | Low | Streamers | |
+| 19 | Template Marketplace | Integration | Medium | Medium | Community | |
+| 20 | Dark Mode/a11y | QoL | Medium | Medium | All | |
 
 ---
 
