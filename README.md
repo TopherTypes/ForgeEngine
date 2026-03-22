@@ -79,8 +79,10 @@ ForgeEngine/
 
 ## Storage
 
-- Documents and presets are stored in browser localStorage (~10MB limit per origin)
+- Documents and presets are stored in browser localStorage (5MB limit)
 - Data persists across sessions until cleared
+- Use the **Storage Manager** (Storage button) to view usage and free up space
+- See [Storage Guide](docs/STORAGE.md) for detailed storage management help
 
 ## Tips
 
@@ -107,6 +109,7 @@ This project is provided as-is for creative and personal use.
 ## Resources
 
 - [Getting Started Guide](docs/GETTING_STARTED.md) - User tutorial
+- [Storage Management Guide](docs/STORAGE.md) - Managing documents and quota
 - [Architecture Guide](docs/ARCHITECTURE.md) - How the system works
 - [Development Guide](docs/DEVELOPMENT.md) - Setup for developers
 - [Contributing Guide](docs/CONTRIBUTING.md) - How to contribute

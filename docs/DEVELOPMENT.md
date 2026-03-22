@@ -274,6 +274,58 @@ Test preset functionality:
 9. ✅ Usage metrics - verify frequency increases after applying preset
 10. ✅ Test preset modal responsive to window size
 
+### Storage Quota Management Testing (Gap 1)
+
+Test storage quota and capacity management:
+
+**Startup quota warning:**
+1. ✅ When app loads with >80% storage used, warning toast appears
+2. ✅ Critical warning (>95%) shows different message
+3. ✅ No warning appears when storage <80%
+
+**Save operations with quota checking:**
+1. ✅ Save document normally (should succeed)
+2. ✅ Save preset normally (should succeed)
+3. ✅ Simulate quota exceeded:
+   - Open DevTools (F12)
+   - Run: `localStorage.setItem('filler', new Array(4*1024*1024).join('x'));`
+   - Try to save document - should show "Storage full" error
+   - Try to save preset - should show quota error
+4. ✅ Error message includes helpful action ("Use Storage Manager to free space")
+
+**Storage Manager modal:**
+1. ✅ Click Storage button to open modal
+2. ✅ Storage usage bar displays correctly (percentage and color)
+3. ✅ Documents listed by size (largest first)
+4. ✅ Presets listed by size with usage frequency
+5. ✅ Delete buttons work for documents
+6. ✅ Delete buttons work for presets
+7. ✅ Modal updates after deletion
+8. ✅ Modal closes via Close button
+9. ✅ Modal closes via backdrop click
+10. ✅ Quota warning color changes (green <80%, orange 80-95%, red >95%)
+
+**Testing quota exceeded scenario:**
+```javascript
+// In browser console:
+// 1. Fill storage almost to limit
+localStorage.setItem('filler', new Array(4.8*1024*1024).join('x'));
+
+// 2. Open Storage Manager - should show very high percentage
+// 3. Try to save document - should fail with quota error
+// 4. Delete filler from Storage Manager (or use DevTools)
+localStorage.removeItem('filler');
+
+// 5. Retry save - should now succeed
+```
+
+**Cleanup and recovery:**
+1. ✅ Create test documents until storage high
+2. ✅ Open Storage Manager
+3. ✅ Delete oldest documents
+4. ✅ Verify percentage updates
+5. ✅ Verify new saves now succeed
+
 ### Browser Testing
 
 Test across browsers:

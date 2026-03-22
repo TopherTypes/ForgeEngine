@@ -4,10 +4,10 @@
 
 import { state, setTemplate, setFlavour, setField, setStyle, toggleStamp, setPaper, setInk, setStampColor, applyFlavourDefaults, restoreState, setCustomStampColor, toggleCustomField } from './state.js';
 import { updatePreview } from './render.js';
-import { buildTemplateGrid, buildSwatches, buildStampGrid, buildStampColorSwatches, buildCustomStampColorPicker, buildFieldCustomizationPanel, buildContentFields, buildSaveModal, buildPresetModal, openSaveModal, closeSaveModal, openLoadModal, closeLoadModal, openPresetModal, closePresetModal, openTemplateHelpModal, closeTemplateHelpModal, openDuplicateModal, closeDuplicateModal, buildPresetOverrideModal, openPresetOverrideModal, closePresetOverrideModal } from './ui.js';
+import { buildTemplateGrid, buildSwatches, buildStampGrid, buildStampColorSwatches, buildCustomStampColorPicker, buildFieldCustomizationPanel, buildContentFields, buildSaveModal, buildPresetModal, openSaveModal, closeSaveModal, openLoadModal, closeLoadModal, openPresetModal, closePresetModal, openTemplateHelpModal, closeTemplateHelpModal, openDuplicateModal, closeDuplicateModal, buildPresetOverrideModal, openPresetOverrideModal, closePresetOverrideModal, buildStorageManagerModal, openStorageManagerModal, closeStorageManagerModal } from './ui.js';
 import { saveDocument, loadDocuments, loadDocument, deleteDocument, duplicateDocument, savePreset, loadPresets, loadPreset, deletePreset, searchAndFilterPresets, sortPresets, getAllPresetTags, getAllPresetFlavours } from './persistence.js';
 import { exportPrint, exportPNG } from './export.js';
-import { showToast, toggleSwitch, validateFields } from './utils.js';
+import { showToast, toggleSwitch, validateFields, getStorageQuotaInfo, formatStorageSize } from './utils.js';
 import { FIELD_CONSTRAINTS, TEMPLATES } from './constants.js';
 import { captureUndoSnapshot, performUndo, performRedo, updateUndoRedoButtonStates, createDebouncedSnapshot, clearUndoRedoStacks } from './undoredo.js';
 
@@ -30,6 +30,15 @@ export function init() {
 
   // Render preview
   updatePreview(state);
+
+  // Check storage quota on startup (Gap 1)
+  const quotaInfo = getStorageQuotaInfo();
+  if (quotaInfo.percentage >= 80) {
+    const msg = quotaInfo.percentage >= 95
+      ? `⚠️ Storage critical: ${formatStorageSize(quotaInfo.available)} available. Save frequently!`
+      : `Storage usage at ${quotaInfo.percentage}%. Consider cleanup soon.`;
+    showToast(msg);
+  }
 
   // Attach event listeners for form controls
   attachFormListeners();
@@ -424,8 +433,17 @@ function attachModalListeners() {
 
       const name = prompt('Document name:', state.fields.title || 'Untitled');
       if (name) {
-        saveDocument(name, state);
-        showToast('Document saved');
+        try {
+          saveDocument(name, state);
+          showToast('Document saved');
+        } catch (e) {
+          if (e.code === 'QUOTA_EXCEEDED') {
+            showToast(`Storage full: ${e.message} Use Storage Manager to free space.`);
+          } else {
+            showToast(`Error: ${e.message}`);
+          }
+          console.error('Save error:', e);
+        }
       }
     });
   }
@@ -522,7 +540,11 @@ function attachModalListeners() {
           savePreset(name, state);
           showToast('Preset saved: ' + name);
         } catch (e) {
-          showToast('Failed to save preset');
+          if (e.code === 'QUOTA_EXCEEDED') {
+            showToast(`Storage full: ${e.message} Use Storage Manager to free space.`);
+          } else {
+            showToast(`Failed to save preset: ${e.message}`);
+          }
           console.error('Save preset error:', e);
         }
       }
@@ -615,11 +637,52 @@ function attachModalListeners() {
     if (e.target.id === 'presetOverrideModal') closePresetOverrideModal();
   });
 
+  // Storage Manager button (Gap 1)
+  const storageManagerBtn = document.getElementById('storageManagerBtn');
+  if (storageManagerBtn) {
+    storageManagerBtn.addEventListener('click', () => {
+      buildStorageManagerModal(
+        (docId) => {
+          deleteDocument(docId);
+          showToast('Document deleted');
+          // Rebuild the modal to show updated list
+          buildStorageManagerModal(
+            (id) => {
+              deleteDocument(id);
+              showToast('Document deleted');
+            },
+            (id) => {
+              deletePreset(id);
+              showToast('Preset deleted');
+            }
+          );
+        },
+        (presetId) => {
+          deletePreset(presetId);
+          showToast('Preset deleted');
+          // Rebuild the modal to show updated list
+          buildStorageManagerModal(
+            (id) => {
+              deleteDocument(id);
+              showToast('Document deleted');
+            },
+            (id) => {
+              deletePreset(id);
+              showToast('Preset deleted');
+            }
+          );
+        }
+      );
+      openStorageManagerModal();
+    });
+  }
+
   // Modal close buttons
   document.getElementById('closeSaveModal')?.addEventListener('click', closeSaveModal);
   document.getElementById('closeLoadModal')?.addEventListener('click', closeLoadModal);
   document.getElementById('closePresetModal')?.addEventListener('click', closePresetModal);
   document.getElementById('closeTemplateHelpModal')?.addEventListener('click', closeTemplateHelpModal);
+  document.getElementById('closeStorageManagerModal')?.addEventListener('click', closeStorageManagerModal);
 
   // Close modals on backdrop click
   document.getElementById('saveModal')?.addEventListener('click', (e) => {
@@ -633,6 +696,9 @@ function attachModalListeners() {
   });
   document.getElementById('templateHelpModal')?.addEventListener('click', (e) => {
     if (e.target.id === 'templateHelpModal') closeTemplateHelpModal();
+  });
+  document.getElementById('storageManagerModalBackdrop')?.addEventListener('click', (e) => {
+    if (e.target.id === 'storageManagerModalBackdrop') closeStorageManagerModal();
   });
 
   // Undo/Redo buttons

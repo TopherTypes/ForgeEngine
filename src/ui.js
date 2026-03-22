@@ -3,7 +3,8 @@
 // ════════════════════════════════════════════════════════════════════════════════
 
 import { TEMPLATES, FLAVOURS, FIELD_LABELS, TEXTAREA_FIELDS, PAPER_TONES, INK_TONES, STAMPS, STAMP_COLORS, FIELD_CONSTRAINTS } from './constants.js';
-import { esc, validateField } from './utils.js';
+import { esc, validateField, formatStorageSize } from './utils.js';
+import { getStorageStats } from './persistence.js';
 
 /**
  * Build template selector grid
@@ -576,6 +577,122 @@ export function openDuplicateModal(originalName, onConfirm, onCancel) {
  */
 export function closeDuplicateModal() {
   const modalBackdrop = document.getElementById('duplicateModalBackdrop');
+  if (modalBackdrop) {
+    modalBackdrop.classList.add('hidden');
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════════
+//  STORAGE MANAGER MODAL (Gap 1 - Storage Quota Management)
+// ════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Build and display storage manager modal showing usage and cleanup options
+ * @param {function} onDeleteDoc - Callback when user deletes a document
+ * @param {function} onDeletePreset - Callback when user deletes a preset
+ */
+export function buildStorageManagerModal(onDeleteDoc, onDeletePreset) {
+  const list = document.getElementById('storageManagerList');
+  if (!list) return;
+
+  list.innerHTML = '';
+
+  const stats = getStorageStats();
+  const { quota, documents, presets } = stats;
+
+  // Create quota bar
+  const quotaContainer = document.createElement('div');
+  quotaContainer.className = 'storage-quota-container';
+  quotaContainer.innerHTML = `
+    <div class="quota-header">
+      <h3>Storage Usage</h3>
+      <div class="quota-text">${formatStorageSize(quota.used)} / ${formatStorageSize(quota.limit)}</div>
+    </div>
+    <div class="quota-bar-container">
+      <div class="quota-bar">
+        <div class="quota-fill" style="width: ${quota.percentage}%; background-color: ${
+          quota.percentage >= 95 ? '#d32f2f' : quota.percentage >= 80 ? '#f57c00' : '#388e3c'
+        }"></div>
+      </div>
+      <div class="quota-percentage">${quota.percentage}% used</div>
+    </div>
+    ${
+      quota.status === 'critical'
+        ? '<div class="quota-warning">⚠️ Storage critical! Free up space immediately.</div>'
+        : quota.status === 'warning'
+        ? '<div class="quota-warning">⚠️ Storage getting full. Consider cleaning up.</div>'
+        : ''
+    }
+  `;
+  list.appendChild(quotaContainer);
+
+  // Documents section
+  const docsSection = document.createElement('div');
+  docsSection.className = 'storage-section';
+  docsSection.innerHTML = `<h4>Documents (${documents.length})</h4>`;
+
+  if (documents.length === 0) {
+    docsSection.innerHTML += '<p style="opacity:0.5">No saved documents</p>';
+  } else {
+    documents.forEach(doc => {
+      const item = document.createElement('div');
+      item.className = 'storage-item';
+      const createdDate = new Date(doc.created).toLocaleDateString();
+      item.innerHTML = `
+        <div class="storage-item-info">
+          <div class="storage-item-name">${esc(doc.name)}</div>
+          <div class="storage-item-meta">${createdDate} • ${formatStorageSize(doc.size)}</div>
+        </div>
+        <button class="btn btn-sm btn-danger">Delete</button>
+      `;
+      item.querySelector('button').onclick = () => onDeleteDoc(doc.id);
+      docsSection.appendChild(item);
+    });
+  }
+  list.appendChild(docsSection);
+
+  // Presets section
+  const presetsSection = document.createElement('div');
+  presetsSection.className = 'storage-section';
+  presetsSection.innerHTML = `<h4>Presets (${presets.length})</h4>`;
+
+  if (presets.length === 0) {
+    presetsSection.innerHTML += '<p style="opacity:0.5">No saved presets</p>';
+  } else {
+    presets.forEach(preset => {
+      const item = document.createElement('div');
+      item.className = 'storage-item';
+      const createdDate = new Date(preset.created).toLocaleDateString();
+      const usageText = preset.useFrequency > 0 ? ` • Used ${preset.useFrequency}x` : '';
+      item.innerHTML = `
+        <div class="storage-item-info">
+          <div class="storage-item-name">${esc(preset.name)}</div>
+          <div class="storage-item-meta">${createdDate}${usageText} • ${formatStorageSize(preset.size)}</div>
+        </div>
+        <button class="btn btn-sm btn-danger">Delete</button>
+      `;
+      item.querySelector('button').onclick = () => onDeletePreset(preset.id);
+      presetsSection.appendChild(item);
+    });
+  }
+  list.appendChild(presetsSection);
+}
+
+/**
+ * Open storage manager modal
+ */
+export function openStorageManagerModal() {
+  const modalBackdrop = document.getElementById('storageManagerModalBackdrop');
+  if (modalBackdrop) {
+    modalBackdrop.classList.remove('hidden');
+  }
+}
+
+/**
+ * Close storage manager modal
+ */
+export function closeStorageManagerModal() {
+  const modalBackdrop = document.getElementById('storageManagerModalBackdrop');
   if (modalBackdrop) {
     modalBackdrop.classList.add('hidden');
   }
