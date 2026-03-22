@@ -3,6 +3,7 @@
 // ════════════════════════════════════════════════════════════════════════════════
 
 import { TEMPLATES, FLAVOURS, FIELD_LABELS, TEXTAREA_FIELDS, PAPER_TONES, INK_TONES, STAMPS, STAMP_COLORS } from './constants.js';
+import { esc } from './utils.js';
 
 /**
  * Build template selector grid
