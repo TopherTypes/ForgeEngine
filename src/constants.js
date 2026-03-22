@@ -233,7 +233,8 @@ export const INK_TONES = [
 ];
 
 export const STAMPS = [
-  'Approved', 'Denied', 'Confidential', 'Internal', 'Archived', 'Redacted', 'Evidence', 'Copy', 'Draft'
+  'Approved', 'Denied', 'Confidential', 'Internal', 'Archived', 'Redacted', 'Evidence', 'Copy', 'Draft',
+  'Reviewed', 'Urgent', 'Void', 'Processed', 'Filed', 'Submitted', 'Expired', 'Rejected'
 ];
 
 export const STAMP_COLORS = [

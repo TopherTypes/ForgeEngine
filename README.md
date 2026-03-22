@@ -15,7 +15,9 @@ Create convincing fake bureaucratic documents for creative projects, TTRPGs, ARG
 - 6 paper tones + 5 ink colors
 - Layout density & alignment options
 - Borders, page wear, photocopy degradation effects
-- 9 stamp overlays (Approved, Denied, Confidential, etc.)
+- 17 stamp variants (Approved, Denied, Confidential, Reviewed, Urgent, Void, Processed, etc.)
+- Custom hex colour picker for stamps
+- Show/hide optional fields per template
 
 📝 **Content Control**
 - Redaction system with inline markup

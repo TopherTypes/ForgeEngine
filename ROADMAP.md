@@ -20,9 +20,10 @@ The roadmap balances three strategic goals:
 Features 1-3 completed; Features 4-7 remain for future phases.
 
 ### Phase 2: Power User Focus (Weeks 4-8)
+**Status**: Phase 2 in progress. Priorities 4-7 completed on 2026-03-22.
 **Target**: Unlock new use cases for advanced users and specific communities (TTRPG, ARG, worldbuilding).
 
-Features 8-13 introduce medium-complexity capabilities requiring state management updates and new UI components.
+Priorities 5-7 (Stamp System Expansion) completed; Features 8-13 remain for future implementation.
 
 ### Phase 3: Major Expansion (Weeks 9+)
 **Target**: Position ForgeEngine as a comprehensive document generation platform.
@@ -67,11 +68,37 @@ The following features have been successfully implemented and are now part of Fo
 - Integrated clone button in load modal between Load and Delete buttons
 - Related Gaps Addressed: Gap 1 (Storage Quota Management), Gap 4 (Deep Cloning for edge cases)
 
+### ✅ Priority 4: Better Presets UI
+**Completed**: 2026-03-22
+**Category**: Enhancement
+**Impact**: High - Advanced search and tagging unlock efficient workflow for power users
+**Summary**:
+- Comprehensive preset metadata system (name, description, tags, category, timestamps)
+- Advanced search with real-time filtering and tag-based filtering
+- Multiple sort options: alphabetical, recent, frequency (most-used)
+- Preset usage tracking (frequency counter, last-used dates)
+- Preset override modal for selective field application
+- Full integration with all 8 templates and 8 flavours
+- Related Gaps Addressed: Gap 8 (Advanced Preset System)
+
+### ✅ Priority 5-7: Stamp System Expansion
+**Completed**: 2026-03-22
+**Category**: Enhancement
+**Impact**: High - Expanded visual options and customization unlock more authentic document styling
+**Summary**:
+- **Priority 5 (More Stamps)**: Added 8 new stamp variants (Reviewed, Urgent, Void, Processed, Filed, Submitted, Expired, Rejected) for total of 17 stamps
+- **Priority 6 (Stamp Colour Picker)**: Custom hex colour input field applies custom colours to all stamps with 80% opacity
+- **Priority 7 (Field Customization)**: Show/hide optional fields per template with checkbox toggles for streamlined documents
+- Custom properties persist across saves and presets
+- New CSS styling for colour picker and field customization UI
+- State management functions: setCustomStampColor(), toggleCustomField()
+- UI builders: buildCustomStampColorPicker(), buildFieldCustomizationPanel()
+
 ---
 
-## 17 Remaining Prioritized Features
+## 13 Remaining Prioritized Features
 
-Features 4-20 are queued for implementation across Phases 2-3. Priority 4 is the next recommended feature to implement.
+Features 8-20 are queued for implementation across Phases 2-3. Priority 8 (Handwritten Notes) is the next recommended feature to implement.
 
 
 ## Identified Development Gaps
