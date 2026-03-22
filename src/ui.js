@@ -120,7 +120,7 @@ export function buildContentFields(state, onFieldSync) {
 /**
  * Build save document modal
  */
-export function buildSaveModal(docs, onLoad, onDelete) {
+export function buildSaveModal(docs, onLoad, onDuplicate, onDelete) {
   const list = document.getElementById('saveList');
   list.innerHTML = '';
   if (docs.length === 0) {
@@ -137,12 +137,16 @@ export function buildSaveModal(docs, onLoad, onDelete) {
       </div>
       <div class="si-actions">
         <button class="btn btn-sm" onclick="">Load</button>
+        <button class="btn btn-sm" onclick="">Clone</button>
         <button class="btn btn-sm btn-danger" onclick="">Delete</button>
       </div>
     `;
-    const loadBtn = div.querySelector('button:first-of-type');
-    const delBtn = div.querySelector('button:last-of-type');
+    const buttons = div.querySelectorAll('button');
+    const loadBtn = buttons[0];
+    const cloneBtn = buttons[1];
+    const delBtn = buttons[2];
     loadBtn.onclick = () => onLoad(doc.id);
+    cloneBtn.onclick = () => onDuplicate(doc.id, doc.name);
     delBtn.onclick = () => onDelete(doc.id);
     list.appendChild(div);
   });
@@ -260,4 +264,89 @@ export function openTemplateHelpModal(templateId) {
  */
 export function closeTemplateHelpModal() {
   document.getElementById('templateHelpModal').classList.add('hidden');
+}
+
+/**
+ * Show duplicate name prompt modal
+ */
+export function openDuplicateModal(originalName, onConfirm, onCancel) {
+  // Create modal if it doesn't exist
+  let modalBackdrop = document.getElementById('duplicateModalBackdrop');
+  if (!modalBackdrop) {
+    modalBackdrop = document.createElement('div');
+    modalBackdrop.id = 'duplicateModalBackdrop';
+    modalBackdrop.className = 'modal-backdrop hidden';
+    modalBackdrop.innerHTML = `
+      <div class="modal">
+        <h3 id="duplicateTitle">Clone Document</h3>
+        <div style="margin-bottom:16px">
+          <label style="display:block;margin-bottom:8px;font-size:13px">New document name:</label>
+          <input type="text" id="duplicateName" style="width:100%;padding:8px;border:1px solid var(--ui-border);border-radius:4px;box-sizing:border-box;font-size:13px" placeholder="Enter new name...">
+        </div>
+        <div class="modal-actions" style="justify-content:flex-end">
+          <button class="btn btn-sm" id="duplicateCancelBtn">Cancel</button>
+          <button class="btn btn-sm btn-primary" id="duplicateConfirmBtn">Clone</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modalBackdrop);
+  }
+
+  const titleEl = modalBackdrop.querySelector('#duplicateTitle');
+  const nameInput = modalBackdrop.querySelector('#duplicateName');
+  const cancelBtn = modalBackdrop.querySelector('#duplicateCancelBtn');
+  const confirmBtn = modalBackdrop.querySelector('#duplicateConfirmBtn');
+
+  // Set default name
+  const defaultName = `${originalName} Copy`;
+  nameInput.value = defaultName;
+  nameInput.select();
+
+  titleEl.textContent = 'Clone Document';
+
+  // Remove old handlers and add new ones
+  const newCancelBtn = cancelBtn.cloneNode(true);
+  const newConfirmBtn = confirmBtn.cloneNode(true);
+  cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+  confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+  const finalNameInput = modalBackdrop.querySelector('#duplicateName');
+  newCancelBtn.onclick = () => {
+    modalBackdrop.classList.add('hidden');
+    if (onCancel) onCancel();
+  };
+
+  newConfirmBtn.onclick = () => {
+    const customName = finalNameInput.value.trim();
+    modalBackdrop.classList.add('hidden');
+    onConfirm(customName || defaultName);
+  };
+
+  // Allow Enter key to confirm
+  finalNameInput.onkeydown = (e) => {
+    if (e.key === 'Enter') {
+      newConfirmBtn.click();
+    } else if (e.key === 'Escape') {
+      newCancelBtn.click();
+    }
+  };
+
+  // Close on backdrop click
+  modalBackdrop.addEventListener('click', (e) => {
+    if (e.target === modalBackdrop) {
+      newCancelBtn.click();
+    }
+  });
+
+  modalBackdrop.classList.remove('hidden');
+}
+
+/**
+ * Close duplicate modal
+ */
+export function closeDuplicateModal() {
+  const modalBackdrop = document.getElementById('duplicateModalBackdrop');
+  if (modalBackdrop) {
+    modalBackdrop.classList.add('hidden');
+  }
 }

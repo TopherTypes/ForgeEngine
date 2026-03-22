@@ -4,8 +4,8 @@
 
 import { state, setTemplate, setFlavour, setField, setStyle, toggleStamp, setPaper, setInk, setStampColor, applyFlavourDefaults, restoreState } from './state.js';
 import { updatePreview } from './render.js';
-import { buildTemplateGrid, buildSwatches, buildStampGrid, buildStampColorSwatches, buildContentFields, buildSaveModal, buildPresetModal, openSaveModal, closeSaveModal, openLoadModal, closeLoadModal, openPresetModal, closePresetModal, openTemplateHelpModal, closeTemplateHelpModal } from './ui.js';
-import { saveDocument, loadDocuments, loadDocument, deleteDocument, savePreset, loadPresets, loadPreset, deletePreset } from './persistence.js';
+import { buildTemplateGrid, buildSwatches, buildStampGrid, buildStampColorSwatches, buildContentFields, buildSaveModal, buildPresetModal, openSaveModal, closeSaveModal, openLoadModal, closeLoadModal, openPresetModal, closePresetModal, openTemplateHelpModal, closeTemplateHelpModal, openDuplicateModal, closeDuplicateModal } from './ui.js';
+import { saveDocument, loadDocuments, loadDocument, deleteDocument, duplicateDocument, savePreset, loadPresets, loadPreset, deletePreset } from './persistence.js';
 import { exportPrint, exportPNG } from './export.js';
 import { showToast, toggleSwitch } from './utils.js';
 import { captureUndoSnapshot, performUndo, performRedo, updateUndoRedoButtonStates, createDebouncedSnapshot, clearUndoRedoStacks } from './undoredo.js';
@@ -275,8 +275,12 @@ function attachModalListeners() {
   const loadBtn = document.getElementById('loadBtn');
   if (loadBtn) {
     loadBtn.addEventListener('click', () => {
-      const docs = loadDocuments();
-      buildSaveModal(docs, (docId) => {
+      function refreshLoadModal() {
+        const docs = loadDocuments();
+        buildSaveModal(docs, onLoadDoc, onDuplicateDoc, onDeleteDoc);
+      }
+
+      function onLoadDoc(docId) {
         const doc = loadDocument(docId);
         if (doc) {
           clearUndoRedoStacks();
@@ -286,11 +290,28 @@ function attachModalListeners() {
           closeLoadModal();
           showToast('Document loaded');
         }
-      }, (docId) => {
+      }
+
+      function onDuplicateDoc(docId, originalName) {
+        openDuplicateModal(originalName, (customName) => {
+          try {
+            const result = duplicateDocument(docId, customName);
+            if (result) {
+              showToast(`Document cloned as "${result.name}"`);
+              refreshLoadModal();
+            }
+          } catch (e) {
+            showToast(`Error: ${e.message}`);
+          }
+        });
+      }
+
+      function onDeleteDoc(docId) {
         deleteDocument(docId);
-        const docs = loadDocuments();
-        buildSaveModal(docs, null, null);
-      });
+        refreshLoadModal();
+      }
+
+      refreshLoadModal();
       openLoadModal();
     });
   }

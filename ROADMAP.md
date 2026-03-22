@@ -79,14 +79,207 @@ Features 14-20 involve significant architectural changes (multi-page rendering, 
 
 ---
 
-### Priority 3: Document Duplication
+### Priority 3: Document Duplication ✅ COMPLETED
+**Status**: Completed on 2026-03-22
 **Category**: Quality of Life
 **Description**: Quick "Clone Document" button in load dialog that creates a copy of a saved document with a new name for rapid iteration.
 **Rationale**: Users often create variations of the same institutional document. Saves repetitive work for power users.
 **Effort**: Low
 **Impact**: High
 **Target Users**: Power Users
-**Technical Notes**: New function in persistence.js to deep-clone document state by ID.
+**Implementation Details**:
+- Created `duplicateDocument(docId, customName?)` function in persistence.js with:
+  - Storage quota check before duplication (prevents silent failures)
+  - Auto-increment naming algorithm (handles collisions: "Copy", "Copy 2", "Copy 3", etc.)
+  - Optional custom name support via rename modal during duplication
+  - Returns new document ID and name for confirmation
+- Added "Clone" button in load modal between Load and Delete buttons
+- Created rename modal component in ui.js with:
+  - Suggested default name ("Original Copy")
+  - Text input for custom naming
+  - Keyboard support: Enter to confirm, Escape to cancel
+  - Click-outside-backdrop to cancel
+- Integrated duplicate handler in main.js that:
+  - Opens rename modal when Clone button is clicked
+  - Calls duplicateDocument with custom or default name
+  - Refreshes load modal to show new document
+  - Shows toast confirmation with new document name
+- Added storage quota check function `getStorageQuotaRemaining()` to help prevent quota exceeded errors
+
+**Next Priority**: Priority 4: More Presets & Better Preset UI
+
+---
+
+## Identified Development Gaps
+
+During implementation of Priority 3 and exploration of the codebase, the following gaps were identified. These represent areas where improvements would enhance reliability, user experience, and enable future features.
+
+### Critical Gaps (Affects Current/Near-term Features)
+
+#### Gap 1: Storage Quota Management
+**Issue**: No check for remaining localStorage quota before saving documents
+**Impact**: Save operations can fail silently when quota exceeded (~10MB limit per origin)
+**Affects**: Document duplication (Priority 3), all save operations
+**Current Status**: Implemented quota check for Priority 3 duplication feature
+**Recommended Action**:
+- Extend quota checks to all save operations (saveDocument, savePreset)
+- Add user-visible warning when approaching storage limit
+- Consider IndexedDB migration for Phase 3 (features 14-15 with images)
+**Priority**: High
+**Effort**: Medium
+
+#### Gap 2: Input Validation & Sanitization
+**Issue**: No validation of field inputs (max length, format validation, type checking)
+**Impact**: Invalid data could be saved into documents; no constraints on field values
+**Affects**: All template fields, user-generated content
+**Current Status**: Partial - gatherState() includes HTML escaping for XSS prevention
+**Recommended Action**:
+- Create centralized `validateField(fieldId, value)` function in utils.js
+- Define max lengths per field type (e.g., title: 200 chars, body: 5000 chars)
+- Validate format for structured fields (dates, numbers)
+**Priority**: Medium
+**Effort**: Medium
+
+#### Gap 3: Data Integrity & Corruption Detection
+**Issue**: No validation of document structure before save; no corruption detection on load
+**Impact**: Malformed data in localStorage could break document loading; no graceful degradation
+**Affects**: Document persistence reliability, loading robustness
+**Current Status**: None
+**Recommended Action**:
+- Create document schema validation on load in persistence.js
+- Add automatic cleanup/migration for malformed documents
+- Log corruption incidents for debugging
+**Priority**: Medium
+**Effort**: Low-Medium
+
+#### Gap 4: Deep Cloning Utility
+**Issue**: Current clone approach uses spread operator (shallow copy risk for nested objects)
+**Impact**: Rare edge case, but document duplication could reference original state if nesting issues arise
+**Affects**: Document duplication accuracy, future feature complexity
+**Current Status**: Functional but not robust; gatherState() approach is sufficient for current use
+**Recommended Action**:
+- Create robust `deepClone()` utility function for future use
+- Test with complex nested structures
+- Consider for Priority 4+ features (bundles, projects)
+**Priority**: Low
+**Effort**: Low
+
+### Functional Gaps (Blocking Higher-Priority Features)
+
+#### Gap 5: Image Insertion Capability
+**Issue**: No file upload, image compression, or image processing
+**Impact**: Cannot fulfill top user request; limits document authenticity
+**Affects**: Priority 14 feature implementation, user requests
+**Blocking**: Priority 14 (Image Insertion), Priority 15 (Multi-page)
+**Current Status**: None
+**Recommended Action**:
+- Phase 3 planning: Design image handling strategy
+- Consider storage migration to IndexedDB (10MB localStorage limit)
+- Implement image compression (JPEG, WebP conversion)
+- Support B&W filter for period-appropriate aesthetic
+**Priority**: High
+**Effort**: High
+
+#### Gap 6: Handwritten Notes/Drawing Tool
+**Issue**: No canvas-based drawing capability for annotations
+**Impact**: Cannot create archival aesthetic that users request
+**Affects**: Priority 8 feature implementation, TTRPG/ARG user experience
+**Blocking**: Priority 8 (Handwritten Notes), Priority 13 (Margin Notes)
+**Current Status**: None
+**Recommended Action**:
+- Phase 2 planning: Design canvas drawing interface
+- Implement pen tool with pressure sensitivity (if touch device)
+- Add eraser and undo for drawing layer
+- Store drawing as base64 image in state
+**Priority**: High
+**Effort**: Medium
+
+#### Gap 7: Multi-Document Workflows
+**Issue**: No project/bundle mode for managing related documents
+**Impact**: ARG creators cannot efficiently manage document sets
+**Affects**: Priority 9 feature implementation, bulk document workflows
+**Blocking**: Priority 9 (Multi-Document Bundles), Priority 15 (Multi-page)
+**Current Status**: None
+**Recommended Action**:
+- Phase 2 planning: Design project data structure
+- Implement shared metadata propagation
+- Create project save/load in persistence.js
+- Add project UI panel in ui.js
+**Priority**: High
+**Effort**: High
+
+#### Gap 8: Advanced Preset System
+**Issue**: No preset categorization, search, or filtering
+**Impact**: Power users with many presets have poor discoverability
+**Affects**: Priority 4 feature implementation, power user experience
+**Blocking**: Priority 4 (Better Preset UI)
+**Current Status**: Basic preset system exists; needs enhancement
+**Recommended Action**:
+- Phase 2 planning: Design preset metadata (category, tags, flavour, use-case)
+- Implement search and filter UI
+- Add preset sorting (recent, alphabetical, custom order)
+- Allow preset preview before applying
+**Priority**: Medium
+**Effort**: Medium
+
+### Performance/Architecture Gaps (Non-blocking, Future Consideration)
+
+#### Gap 9: State Mutation Race Conditions
+**Issue**: No immutability guarantees on state mutations; debounced snapshots (500ms) could lose rapid changes
+**Impact**: Rare edge case during extreme rapid user input
+**Affects**: Undo/redo reliability, data consistency
+**Current Status**: Low risk; mitigated by debouncing
+**Recommended Action**:
+- Monitor for user reports of lost changes
+- Consider immutable state library (Immer.js) if issues arise in Phase 2+
+- Add state mutation guards
+**Priority**: Low
+**Effort**: Medium
+
+#### Gap 10: PNG Export Reliability
+**Issue**: No retry mechanism for Canvas export failures; limited error feedback
+**Impact**: Image rendering could fail without clear guidance
+**Affects**: Export workflow reliability
+**Current Status**: Fallback to print/PDF available
+**Recommended Action**:
+- Add try/catch around Canvas operations
+- Show detailed error messages to user
+- Implement retry mechanism with exponential backoff
+- Add fallback option in export.js
+**Priority**: Low
+**Effort**: Low
+
+#### Gap 11: Event Handler Architecture Scalability
+**Issue**: Event handlers manually attached per button; no event delegation pattern
+**Impact**: Code maintainability concern if many new controls added
+**Affects**: Code organization, scaling for Priorities 4-7
+**Current Status**: Current approach works fine for current scope
+**Recommended Action**:
+- Phase 2 planning: Consider refactoring to event delegation
+- Only refactor if handler count exceeds 30+ (currently at ~15)
+- Document event delegation patterns for future contributors
+**Priority**: Low
+**Effort**: Low
+
+---
+
+## Gap Resolution Timeline
+
+**Phase 1 (Immediate - Weeks 1-3)**:
+- ✅ Storage Quota Check (completed with Priority 3)
+- Data Integrity checks (recommended pre-Phase 2)
+
+**Phase 2 (Weeks 4-8)**:
+- Input Validation Layer (before Priority 4+)
+- Advanced Preset System enhancements (Priority 4)
+- Handwritten Notes planning (Priority 8)
+- Multi-Document Bundles planning (Priority 9)
+
+**Phase 3 (Weeks 9+)**:
+- IndexedDB Migration (enables Priority 14-15)
+- Image Processing Pipeline (Priority 14)
+- Drawing Tool Canvas Framework (Priority 8)
+- Deep Cloning Utility (foundation for complex features)
 
 ---
 
