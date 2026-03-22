@@ -249,6 +249,179 @@ export const FIELD_LABELS = {
 2. Add `.stamp-mytype` styling in `styles.css`
 3. Appears automatically in stamp grid
 
+## Field Validation System (Gap 2)
+
+ForgeEngine implements client-side field validation to prevent invalid data from being saved.
+
+### Validation Architecture
+
+```
+Field Input
+    ↓
+[Blur Event]
+    ↓
+validateField() in utils.js
+    ↓
+Check Constraints (FIELD_CONSTRAINTS)
+    ↓
+Display Errors (displayFieldError in ui.js)
+    ↓
+User fixes field / tries to save
+    ↓
+[If saving]
+    ↓
+validateAllFields() in main.js
+    ↓
+Validation passes? → Save | Validation fails? → Show error toast
+```
+
+### Key Components
+
+1. **FIELD_CONSTRAINTS** (`src/constants.js`):
+   - Defines constraints for 35+ form fields
+   - Properties: `maxLength`, `minLength`, `type`, `pattern`
+   - Types: `'text'`, `'richtext'`, `'date'`, `'time'`
+
+2. **validateField()** (`src/utils.js`):
+   - Validates single field against constraints
+   - Returns: `{ valid: boolean, errors: [string] }`
+   - Checks length, format (date/time), required fields
+
+3. **validateFields()** (`src/utils.js`):
+   - Validates multiple fields at once
+   - Returns: `{ valid: boolean, fieldErrors: {fieldId: [errors]} }`
+   - Used before saving documents
+
+4. **buildContentFields()** (`src/ui.js` - Enhanced):
+   - Creates input fields with error containers
+   - Attaches blur event listeners for validation
+   - Displays errors with visual feedback
+   - Clear errors on input
+
+5. **validateAllFields()** (`src/main.js`):
+   - Validates all fields in current template
+   - Blocks save if any validation fails
+   - Shows error toast with count
+
+### Visual Feedback
+
+- **Invalid field**: Red border + light red background
+- **Error message**: Below field in red text
+- **Clear on fix**: Error clears when user modifies field
+- **Save attempt**: Error toast if validation fails
+
+### Adding Validation to New Fields
+
+1. Add constraint to `FIELD_CONSTRAINTS` in `src/constants.js`
+2. Use field in template's `fields` array
+3. Validation runs automatically on blur and before save
+
+## Preset System (Priority 4)
+
+ForgeEngine saves and manages document styling through presets. Users can create presets from current styling and apply them to new documents.
+
+### Preset Architecture
+
+```
+User styles document
+    ↓
+Clicks "Save Preset"
+    ↓
+savePreset() in persistence.js
+    ↓
+Create preset object with:
+  - Style properties (paper, ink, stamps, etc.)
+  - Metadata (name, description, tags, usage)
+    ↓
+Store in localStorage
+    ↓
+User clicks "Load Presets"
+    ↓
+buildPresetModal() displays all presets
+    ↓
+User selects action:
+  - Apply: Load all styles
+  - Override: Choose which fields to apply
+  - Delete: Remove preset
+```
+
+### Preset Components
+
+1. **Preset Data Structure** (`src/persistence.js`):
+```javascript
+{
+  id: '1711200000000',
+  name: 'Official Government',
+  description: 'Government-style documents',
+  template: 'memo',           // Optional
+  paper: 'cream',
+  ink: 'black',
+  stamps: ['Approved'],
+  // ... all style properties
+  metadata: {
+    tags: ['official'],
+    category: 'custom',
+    useFrequency: 5,
+    lastUsed: 1711286400000
+  }
+}
+```
+
+2. **Persistence Functions** (`src/persistence.js`):
+   - `savePreset(name, state, metadata)` - Save current styling
+   - `loadPreset(presetId)` - Load preset and update metrics
+   - `deletePreset(presetId)` - Remove preset
+   - `loadPresets()` - Get all presets
+   - `searchAndFilterPresets(query, filters)` - Search/filter presets
+   - `sortPresets(presets, sortBy)` - Sort by: 'alphabetical', 'recent', 'frequency'
+   - `getAllPresetTags()` - Get unique tags from all presets
+
+3. **UI Components** (`src/ui.js`):
+   - `buildPresetModal()` - Display preset grid with metadata
+   - `buildPresetOverrideModal()` - Choose which fields to apply
+   - `openPresetModal()` / `closePresetModal()` - Modal control
+
+4. **Preset Modal Features** (`src/main.js`):
+   - Search presets by name/description/tags (with 300ms debounce)
+   - Sort: alphabetical, recent, frequency
+   - Filter by tags (multiple selection)
+   - Apply full preset or selective fields
+   - Delete with confirmation
+   - Usage metrics: frequency counter, last used date
+
+### Preset Workflow
+
+1. **Create Preset**:
+   - User adjusts styling (paper, ink, stamps, density, etc.)
+   - Clicks "Save Preset" button
+   - Enters preset name in prompt
+   - `savePreset()` stores styling snapshot with metadata
+
+2. **Apply Preset**:
+   - User clicks "Load Presets" button
+   - Modal displays all presets in grid
+   - User can search, filter by tag, or sort
+   - Click "Apply" to load all style settings
+   - Content fields are NOT affected
+
+3. **Override Fields**:
+   - User clicks "Override Fields" instead of "Apply"
+   - Modal shows list of all fields
+   - Checkboxes select which fields to apply
+   - `onApplyWithOverride()` applies only selected fields
+   - Allows mixing preset styles with existing content
+
+### Usage Metrics
+
+Presets track usage for sorting and insights:
+- **useFrequency**: Number of times preset applied
+- **lastUsed**: Timestamp of most recent application
+- Updated automatically when preset is loaded
+
+Enables sorting by:
+- `'recent'` - Most recently used first
+- `'frequency'` - Most commonly used first
+
 ## Browser APIs Used
 
 - **localStorage**: Persistent document/preset storage

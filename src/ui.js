@@ -2,8 +2,8 @@
 //  UI BUILDERS & COMPONENTS
 // ════════════════════════════════════════════════════════════════════════════════
 
-import { TEMPLATES, FLAVOURS, FIELD_LABELS, TEXTAREA_FIELDS, PAPER_TONES, INK_TONES, STAMPS, STAMP_COLORS } from './constants.js';
-import { esc } from './utils.js';
+import { TEMPLATES, FLAVOURS, FIELD_LABELS, TEXTAREA_FIELDS, PAPER_TONES, INK_TONES, STAMPS, STAMP_COLORS, FIELD_CONSTRAINTS } from './constants.js';
+import { esc, validateField } from './utils.js';
 
 /**
  * Build template selector grid
@@ -97,6 +97,7 @@ export function buildStampColorSwatches(state, onStampColorSelect) {
 
 /**
  * Build content input fields based on template
+ * Includes validation with visual error feedback (Gap 2)
  */
 export function buildContentFields(state, onFieldSync) {
   const container = document.getElementById('contentFields');
@@ -106,15 +107,75 @@ export function buildContentFields(state, onFieldSync) {
     const div = document.createElement('div');
     div.className = 'field';
     const label = FIELD_LABELS[fid] || fid;
+    const constraints = FIELD_CONSTRAINTS[fid];
+
     if (TEXTAREA_FIELDS.includes(fid)) {
-      div.innerHTML = `<label>${label}</label><textarea id="field_${fid}" rows="4" placeholder="${label}...">${state.fields[fid] || ''}</textarea>`;
-      div.querySelector('textarea').addEventListener('input', (e) => onFieldSync(fid, e.target.value));
+      div.innerHTML = `<label>${label}</label><textarea id="field_${fid}" rows="4" placeholder="${label}..." data-field="${fid}"></textarea><div id="error_${fid}" class="field-error"></div>`;
+      const textarea = div.querySelector('textarea');
+      textarea.value = state.fields[fid] || '';
+
+      // Real-time validation on blur
+      textarea.addEventListener('blur', (e) => {
+        const result = validateField(fid, e.target.value, constraints);
+        displayFieldError(fid, result);
+      });
+
+      // Update state on input
+      textarea.addEventListener('input', (e) => {
+        onFieldSync(fid, e.target.value);
+        // Clear error on input (will revalidate on blur)
+        const errorDiv = document.getElementById(`error_${fid}`);
+        if (errorDiv) {
+          errorDiv.textContent = '';
+          errorDiv.style.display = 'none';
+        }
+        div.classList.remove('has-error');
+      });
     } else {
-      div.innerHTML = `<label>${label}</label><input type="text" id="field_${fid}" value="${state.fields[fid] || ''}" placeholder="${label}...">`;
-      div.querySelector('input').addEventListener('input', (e) => onFieldSync(fid, e.target.value));
+      div.innerHTML = `<label>${label}</label><input type="text" id="field_${fid}" placeholder="${label}..." data-field="${fid}"><div id="error_${fid}" class="field-error"></div>`;
+      const input = div.querySelector('input');
+      input.value = state.fields[fid] || '';
+
+      // Real-time validation on blur
+      input.addEventListener('blur', (e) => {
+        const result = validateField(fid, e.target.value, constraints);
+        displayFieldError(fid, result);
+      });
+
+      // Update state on input
+      input.addEventListener('input', (e) => {
+        onFieldSync(fid, e.target.value);
+        // Clear error on input (will revalidate on blur)
+        const errorDiv = document.getElementById(`error_${fid}`);
+        if (errorDiv) {
+          errorDiv.textContent = '';
+          errorDiv.style.display = 'none';
+        }
+        div.classList.remove('has-error');
+      });
     }
     container.appendChild(div);
   });
+}
+
+/**
+ * Display validation errors for a field (Gap 2)
+ */
+function displayFieldError(fieldId, validationResult) {
+  const errorDiv = document.getElementById(`error_${fieldId}`);
+  const fieldDiv = document.getElementById(`field_${fieldId}`)?.parentElement;
+
+  if (!errorDiv) return;
+
+  if (!validationResult.valid && validationResult.errors.length > 0) {
+    errorDiv.textContent = validationResult.errors[0]; // Show first error
+    errorDiv.style.display = 'block';
+    if (fieldDiv) fieldDiv.classList.add('has-error');
+  } else {
+    errorDiv.textContent = '';
+    errorDiv.style.display = 'none';
+    if (fieldDiv) fieldDiv.classList.remove('has-error');
+  }
 }
 
 /**

@@ -9,11 +9,58 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 ### Planned (Phase 2: Weeks 4-8)
-- Priority 4: Better Presets UI with search, filter, and categorization
-- Priority 5-13: Medium-complexity power user features
+- Priority 5-13: Medium-complexity power user features (e.g., more stamps, field customization, multi-docs)
 
 ### Planned (Phase 3: Weeks 9+)
 - Priority 14-20: Major expansion with images, multi-page documents, and custom institution kits
+
+---
+
+## [1.1.0] - 2026-03-22
+
+### Release Summary
+**Phase 2: Data Integrity & Preset Refinement** - Input validation system completed (Gap 2) to improve data quality, and preset system fully integrated and documented. Unblocks Priority 7 (Field Customization).
+
+### Added
+
+#### Data Quality
+- **Input Validation & Sanitization** (Gap 2 - COMPLETED)
+  - Comprehensive field validation with FIELD_CONSTRAINTS for all 35+ form fields
+  - Constraint types: maxLength, minLength, format validation (date/time), type checking
+  - Real-time validation on blur with visual error feedback (red borders, error text)
+  - Validation prevents invalid documents from being saved with clear error messages
+  - Foundation enables Priority 7 (Field Customization - Advanced Mode)
+  - Improves data integrity and prevents malformed documents in storage
+  - Error display: clear per-field messages (e.g., "Title must not exceed 200 characters")
+
+#### Preset System Refinement
+- **Better Presets UI & Management** (Priority 4 - COMPLETED)
+  - Comprehensive preset saving with metadata (name, description, tags, category)
+  - Advanced search with real-time filtering (debounced for performance)
+  - Multiple sort options: alphabetical, recent, frequency (most-used), custom
+  - Tag-based filtering with dynamic tag discovery from existing presets
+  - Preset usage tracking: frequency counter and last-used timestamps
+  - Preset cards display rich metadata and usage information
+  - Preset override modal allows selective field application
+  - Save/Load/Delete preset buttons with confirmation
+  - Full integration with all 8 templates and 8 flavours
+
+### Changed
+- Field validation now runs automatically on blur and before save
+- Preset modal enhanced with responsive grid layout for preset cards
+- Validation error styles added to form fields (red border + background)
+
+### Technical Improvements
+- Added FIELD_CONSTRAINTS export to constants.js with all 35+ field validations
+- Enhanced buildContentFields() in ui.js with validation error display
+- Integrated validateFields() from utils.js into save workflow
+- Added CSS validation styling (.has-error, .field-error classes)
+- Improved user feedback with actionable error messages
+
+### Fixed
+- Form submission no longer allows invalid field values
+- Validation errors clear when user modifies fields
+- Preset metadata properly initialized for all stored presets
 
 ---
 
