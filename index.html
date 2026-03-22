@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bureaucratic Document Faker</title>
+  <link rel="stylesheet" href="src/styles.css">
+</head>
+<body>
+
+<div class="app" id="app">
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-brand">
+      <div class="icon">B</div>
+      <span>Bureaucratic Document Faker</span>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-sm" id="newBtn" onclick="alert('Use Load to open saved docs')">New</button>
+      <button class="btn btn-sm" id="saveBtn">Save</button>
+      <button class="btn btn-sm" id="loadBtn">Load</button>
+      <button class="btn btn-sm" id="pngBtn">PNG</button>
+      <button class="btn btn-sm btn-primary" id="printBtn">Print / PDF</button>
+    </div>
+  </header>
+
+  <!-- LEFT PANEL: CONTENT -->
+  <div class="panel" id="leftPanel">
+    <!-- Template selection -->
+    <div class="panel-section">
+      <div class="panel-title">Template</div>
+      <div class="template-grid" id="templateGrid"></div>
+    </div>
+
+    <!-- Flavour Pack -->
+    <div class="panel-section">
+      <div class="panel-title">Institutional Flavour</div>
+      <div class="field">
+        <select id="flavourSelect">
+          <option value="government">Government / Civil Service</option>
+          <option value="academic">Academic / University</option>
+          <option value="research">Research Lab</option>
+          <option value="police">Police / Investigative</option>
+          <option value="medical">Medical / Administrative</option>
+          <option value="corporate">Corporate Internal</option>
+          <option value="occult">Occult Archive</option>
+          <option value="retro">Retro Terminal Bureau</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Content fields -->
+    <div class="panel-section">
+      <div class="panel-title">Content</div>
+      <div id="contentFields"></div>
+    </div>
+
+    <!-- Notes / Attachments -->
+    <div class="panel-section">
+      <div class="panel-title">Extras</div>
+      <div class="field">
+        <label>Notes</label>
+        <textarea id="docNotes" rows="2" placeholder="Optional notes..."></textarea>
+      </div>
+      <div class="field">
+        <label>Attachments List</label>
+        <input type="text" id="docAttachments" placeholder="e.g. Exhibit A, Photo Set 12">
+      </div>
+      <div class="field">
+        <label>Footer Left</label>
+        <input type="text" id="footerLeft" placeholder="e.g. FORM 117-B REV. 2">
+      </div>
+      <div class="field">
+        <label>Footer Right</label>
+        <input type="text" id="footerRight" placeholder="e.g. Page 1 of 1">
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTRE: PREVIEW -->
+  <div class="preview-area" id="previewArea">
+    <div class="preview-wrapper" id="previewWrapper">
+      <div id="docPreview"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL: STYLE -->
+  <div class="panel" id="rightPanel">
+    <!-- Classification -->
+    <div class="panel-section">
+      <div class="panel-title">Classification</div>
+      <div class="field">
+        <select id="classificationSelect">
+          <option value="none">None</option>
+          <option value="unclassified">Unclassified</option>
+          <option value="internal">Internal Use Only</option>
+          <option value="confidential">Confidential</option>
+          <option value="secret">Secret</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Paper & Ink -->
+    <div class="panel-section">
+      <div class="panel-title">Paper Tone</div>
+      <div class="swatch-row" id="paperSwatches"></div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-title">Ink Tone</div>
+      <div class="swatch-row" id="inkSwatches"></div>
+    </div>
+
+    <!-- Layout -->
+    <div class="panel-section">
+      <div class="panel-title">Layout</div>
+      <div class="field">
+        <label>Density</label>
+        <select id="densitySelect">
+          <option value="compact">Compact</option>
+          <option value="normal" selected>Normal</option>
+          <option value="spacious">Spacious</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Header Alignment</label>
+        <select id="headerAlign">
+          <option value="center" selected>Centre</option>
+          <option value="left">Left</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Border</label>
+        <select id="borderStyle">
+          <option value="none">None</option>
+          <option value="thin">Thin</option>
+          <option value="double">Double</option>
+          <option value="heavy">Heavy</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Effects -->
+    <div class="panel-section">
+      <div class="panel-title">Effects</div>
+      <div class="field">
+        <label>Page Wear</label>
+        <div class="slider-row">
+          <input type="range" id="pageWear" min="0" max="100" value="0">
+          <span class="slider-val" id="pageWearVal">0</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Photocopy Noise</label>
+        <div class="slider-row">
+          <input type="range" id="photoNoise" min="0" max="100" value="0">
+          <span class="slider-val" id="photoNoiseVal">0</span>
+        </div>
+      </div>
+      <div class="toggle-row">
+        <span>Signature Block</span>
+        <div class="toggle" id="sigToggle"></div>
+      </div>
+      <div class="toggle-row">
+        <span>Photo Placeholder</span>
+        <div class="toggle" id="photoToggle"></div>
+      </div>
+    </div>
+
+    <!-- Stamps -->
+    <div class="panel-section">
+      <div class="panel-title">Stamps</div>
+      <div class="stamp-grid" id="stampGrid"></div>
+      <div style="margin-top:10px">
+        <label style="font-size:11px;color:var(--ui-text-dim);display:block;margin-bottom:4px">Stamp Colour</label>
+        <div class="swatch-row" id="stampColorSwatches"></div>
+      </div>
+    </div>
+
+    <!-- Redaction -->
+    <div class="panel-section">
+      <div class="panel-title">Redaction</div>
+      <p style="font-size:11px;color:var(--ui-text-dim);margin-bottom:8px">
+        Wrap text in [REDACTED] or [R]...[/R] in the body field to apply redaction bars.
+      </p>
+      <div class="toggle-row">
+        <span>Show redaction markers</span>
+        <div class="toggle active" id="redactionToggle"></div>
+      </div>
+    </div>
+
+    <!-- Presets -->
+    <div class="panel-section">
+      <div class="panel-title">Presets</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-sm" id="savePresetBtn">Save Preset</button>
+        <button class="btn btn-sm" id="loadPresetBtn">Load Preset</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-backdrop hidden" id="saveModal">
+  <div class="modal">
+    <h3>Save Document</h3>
+    <div id="saveList"></div>
+    <div class="modal-actions">
+      <button class="btn" id="closeSaveModal">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop hidden" id="loadModal">
+  <div class="modal">
+    <h3>Saved Documents</h3>
+    <div id="loadList"></div>
+    <div class="modal-actions">
+      <button class="btn" id="closeLoadModal">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop hidden" id="presetModal">
+  <div class="modal">
+    <h3>Presets</h3>
+    <div id="presetList"></div>
+    <div class="modal-actions">
+      <button class="btn" id="closePresetModal">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
