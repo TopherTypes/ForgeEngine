@@ -2,8 +2,41 @@
 //  PERSISTENCE LAYER (LocalStorage)
 // ════════════════════════════════════════════════════════════════════════════════
 
+import {
+  estimateSaveSize,
+  getItemSize,
+  getStorageQuotaInfo,
+  formatStorageSize
+} from './utils.js';
+
 const DOCS_KEY = 'bdf_docs';
 const PRESETS_KEY = 'bdf_presets';
+const STORAGE_LIMIT = 5 * 1024 * 1024; // 5MB
+
+/**
+ * Check if save operation will fit in remaining storage quota
+ * @param {number} estimatedSize - Estimated size of data to save (bytes)
+ * @throws {Error} If quota would be exceeded
+ * @returns {object} Quota info before save
+ * @private
+ */
+function _checkQuotaForSave(estimatedSize) {
+  const quotaInfo = getStorageQuotaInfo();
+
+  // Need at least 50KB buffer for metadata and other storage
+  const buffer = 50 * 1024;
+
+  if (estimatedSize > quotaInfo.available - buffer) {
+    const error = new Error(
+      `Storage quota exceeded. Need ${formatStorageSize(estimatedSize)}, ` +
+      `but only ${formatStorageSize(quotaInfo.available - buffer)} available.`
+    );
+    error.code = 'QUOTA_EXCEEDED';
+    throw error;
+  }
+
+  return quotaInfo;
+}
 
 /**
  * Gather complete application state for saving
@@ -37,6 +70,7 @@ export function gatherState(state) {
 
 /**
  * Save a document to localStorage
+ * @throws {Error} If quota exceeded (error.code === 'QUOTA_EXCEEDED')
  */
 export function saveDocument(name, state) {
   try {
@@ -47,6 +81,12 @@ export function saveDocument(name, state) {
       ...gatherState(state),
       created: new Date().toISOString()
     };
+
+    // Check quota before saving
+    const newDocsJson = JSON.stringify([...docs, doc]);
+    const estimatedSize = estimateSaveSize(newDocsJson);
+    _checkQuotaForSave(estimatedSize);
+
     docs.push(doc);
     localStorage.setItem(DOCS_KEY, JSON.stringify(docs));
     return doc.id;
@@ -181,6 +221,7 @@ export function duplicateDocument(docId, customName) {
 
 /**
  * Save a style preset with metadata support (Gap 8)
+ * @throws {Error} If quota exceeded (error.code === 'QUOTA_EXCEEDED')
  */
 export function savePreset(name, state, metadata = {}) {
   try {
@@ -217,6 +258,12 @@ export function savePreset(name, state, metadata = {}) {
         useFrequency: 0
       }
     };
+
+    // Check quota before saving
+    const newPresetsJson = JSON.stringify([...presets, preset]);
+    const estimatedSize = estimateSaveSize(newPresetsJson);
+    _checkQuotaForSave(estimatedSize);
+
     presets.push(preset);
     localStorage.setItem(PRESETS_KEY, JSON.stringify(presets));
     return preset.id;
@@ -284,6 +331,50 @@ export function deletePreset(presetId) {
     console.error('Failed to delete preset:', e);
     throw e;
   }
+}
+
+/**
+ * Get storage usage statistics for all documents and presets
+ * Useful for storage manager UI to help users identify what to delete
+ * @returns {object} { quota, documents: [...], presets: [...] }
+ */
+export function getStorageStats() {
+  const quota = getStorageQuotaInfo();
+  const docs = loadDocuments();
+  const presets = loadPresets();
+
+  // Get detailed info for each document
+  const documentStats = docs.map(doc => ({
+    id: doc.id,
+    name: doc.name,
+    size: estimateSaveSize(doc),
+    created: doc.created,
+    template: doc.template,
+    flavour: doc.flavour
+  }));
+
+  // Get detailed info for each preset
+  const presetStats = presets.map(preset => ({
+    id: preset.id,
+    name: preset.name,
+    size: estimateSaveSize(preset),
+    created: preset.created,
+    flavour: preset.flavour,
+    useFrequency: preset.metadata?.useFrequency || 0,
+    lastUsed: preset.metadata?.lastUsed || null
+  }));
+
+  // Sort by size (descending)
+  documentStats.sort((a, b) => b.size - a.size);
+  presetStats.sort((a, b) => b.size - a.size);
+
+  return {
+    quota,
+    documents: documentStats,
+    presets: presetStats,
+    totalDocSize: documentStats.reduce((sum, d) => sum + d.size, 0),
+    totalPresetSize: presetStats.reduce((sum, p) => sum + p.size, 0)
+  };
 }
 
 // ════════════════════════════════════════════════════════════════════════════════

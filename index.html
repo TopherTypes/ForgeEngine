@@ -21,6 +21,7 @@
       <button class="btn btn-sm" id="newBtn" onclick="alert('Use Load to open saved docs')">New</button>
       <button class="btn btn-sm" id="saveBtn">Save</button>
       <button class="btn btn-sm" id="loadBtn">Load</button>
+      <button class="btn btn-sm" id="storageManagerBtn" title="View and manage stored documents and presets">Storage</button>
       <button class="btn btn-sm" id="pngBtn">PNG</button>
       <button class="btn btn-sm btn-primary" id="printBtn">Print / PDF</button>
     </div>
@@ -277,6 +278,17 @@
     <div id="templateHelpContent"></div>
     <div class="modal-actions">
       <button class="btn" id="closeTemplateHelpModal">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Storage Manager Modal -->
+<div class="modal-backdrop hidden" id="storageManagerModalBackdrop">
+  <div class="modal modal-large">
+    <h3>Storage Manager</h3>
+    <div id="storageManagerList"></div>
+    <div class="modal-actions">
+      <button class="btn" id="closeStorageManagerModal">Close</button>
     </div>
   </div>
 </div>

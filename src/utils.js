@@ -120,3 +120,90 @@ export function validateFields(fields, fieldConstraints) {
 
   return { valid, fieldErrors };
 }
+
+// ════════════════════════════════════════════════════════════════════════════════
+//  STORAGE QUOTA MANAGEMENT (Gap 1 Extension)
+// ════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Get size of data in bytes (JSON stringified)
+ * @param {*} data - Data to measure
+ * @returns {number} Size in bytes
+ */
+export function estimateSaveSize(data) {
+  try {
+    return new Blob([JSON.stringify(data)]).size;
+  } catch (e) {
+    console.warn('Could not estimate save size:', e);
+    return 0;
+  }
+}
+
+/**
+ * Get size of a specific localStorage item in bytes
+ * @param {string} key - localStorage key
+ * @returns {number} Size in bytes
+ */
+export function getItemSize(key) {
+  try {
+    const value = localStorage.getItem(key);
+    if (!value) return 0;
+    return new Blob([value]).size;
+  } catch (e) {
+    console.warn(`Could not get size for key "${key}":`, e);
+    return 0;
+  }
+}
+
+/**
+ * Get detailed storage quota information
+ * @returns {object} {used, available, limit, percentage}
+ */
+export function getStorageQuotaInfo() {
+  const STORAGE_LIMIT = 5 * 1024 * 1024; // 5MB
+
+  try {
+    // Calculate total localStorage usage
+    let used = 0;
+    for (let key in localStorage) {
+      if (localStorage.hasOwnProperty(key)) {
+        used += getItemSize(key);
+      }
+    }
+
+    const available = Math.max(0, STORAGE_LIMIT - used);
+    const percentage = Math.min(100, Math.round((used / STORAGE_LIMIT) * 100));
+
+    return {
+      used,
+      available,
+      limit: STORAGE_LIMIT,
+      percentage,
+      status: percentage >= 90 ? 'critical' : percentage >= 80 ? 'warning' : 'ok'
+    };
+  } catch (e) {
+    console.error('Failed to calculate storage quota:', e);
+    return {
+      used: 0,
+      available: STORAGE_LIMIT,
+      limit: STORAGE_LIMIT,
+      percentage: 0,
+      status: 'unknown'
+    };
+  }
+}
+
+/**
+ * Format bytes as human-readable storage size
+ * @param {number} bytes - Size in bytes
+ * @returns {string} Formatted string (e.g., "2.5 MB")
+ */
+export function formatStorageSize(bytes) {
+  if (bytes === 0) return '0 B';
+
+  const units = ['B', 'KB', 'MB', 'GB'];
+  const index = Math.floor(Math.log(bytes) / Math.log(1024));
+  const size = (bytes / Math.pow(1024, index)).toFixed(2);
+
+  return `${size} ${units[index]}`;
+}
