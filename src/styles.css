@@ -328,6 +328,65 @@ body {
 .swatch:hover { transform: scale(1.1); }
 .swatch.active { border-color: var(--ui-text-bright); }
 
+/* ── CUSTOM COLOUR PICKER (Priority 6) ── */
+.color-picker-wrapper {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+.color-input {
+  width: 50px;
+  height: 36px;
+  border: 1px solid var(--ui-border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.color-input:hover { border-color: var(--ui-accent); }
+.btn-small {
+  padding: 6px 12px;
+  background: #444;
+  border: 1px solid var(--ui-border);
+  color: var(--ui-text);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.15s;
+}
+.btn-small:hover { background: #555; border-color: var(--ui-accent); }
+
+/* ── FIELD CUSTOMIZATION (Priority 7) ── */
+.field-customization-panel {
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(0,0,0,0.2);
+  border-radius: 4px;
+}
+.field-toggles {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+.field-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--ui-text-muted);
+  transition: color 0.15s;
+}
+.field-toggle:hover { color: var(--ui-text); }
+.field-toggle input[type="checkbox"] {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+.field-toggle span {
+  user-select: none;
+}
+
 /* ── PREVIEW AREA ── */
 .preview-area {
   background: #2e2e34;
@@ -594,6 +653,14 @@ body {
 .stamp-evidence { color: rgba(0,0,150,0.45); border-color: rgba(0,0,150,0.45); bottom: 25%; left: 8%; transform: rotate(-8deg); font-size: 18px; }
 .stamp-copy { color: rgba(0,0,0,0.2); border-color: rgba(0,0,0,0.2); top: 50%; left: 50%; transform: translate(-50%,-50%) rotate(-35deg); font-size: 48px; letter-spacing: 12px; }
 .stamp-draft { color: rgba(150,100,0,0.4); border-color: rgba(150,100,0,0.4); top: 20%; left: 15%; transform: rotate(12deg); font-size: 30px; }
+.stamp-reviewed { color: rgba(0,120,0,0.5); border-color: rgba(0,120,0,0.5); bottom: 30%; right: 15%; transform: rotate(-10deg); font-size: 26px; }
+.stamp-urgent { color: rgba(220,0,0,0.6); border-color: rgba(220,0,0,0.6); top: 15%; left: 20%; transform: rotate(20deg); font-size: 32px; font-weight: bold; }
+.stamp-void { color: rgba(150,0,0,0.5); border-color: rgba(150,0,0,0.5); top: 35%; right: 20%; transform: rotate(-15deg); font-size: 24px; }
+.stamp-processed { color: rgba(0,100,150,0.5); border-color: rgba(0,100,150,0.5); bottom: 15%; right: 25%; transform: rotate(8deg); font-size: 20px; }
+.stamp-filed { color: rgba(100,100,100,0.45); border-color: rgba(100,100,100,0.45); top: 60%; left: 30%; transform: rotate(-12deg); font-size: 22px; }
+.stamp-submitted { color: rgba(0,80,150,0.5); border-color: rgba(0,80,150,0.5); bottom: 40%; left: 15%; transform: rotate(5deg); font-size: 20px; }
+.stamp-expired { color: rgba(180,120,0,0.5); border-color: rgba(180,120,0,0.5); top: 50%; right: 10%; transform: rotate(-25deg); font-size: 28px; }
+.stamp-rejected { color: rgba(200,0,0,0.55); border-color: rgba(200,0,0,0.55); bottom: 35%; right: 5%; transform: rotate(12deg); font-size: 24px; }
 
 /* Stamp colour overrides */
 .stamp-color-red { color: rgba(180,0,0,0.5) !important; border-color: rgba(180,0,0,0.5) !important; }

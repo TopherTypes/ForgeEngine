@@ -21,6 +21,8 @@ export let state = {
   photoNoise: 0,
   stamps: [],
   stampColor: 'default',
+  customStampColor: null, // Priority 6: Custom hex color for stamps
+  customFieldsEnabled: {}, // Priority 7: Template field customization
   showSignature: false,
   showPhoto: false,
   showRedaction: true,
@@ -58,6 +60,8 @@ export function resetState() {
     photoNoise: 0,
     stamps: [],
     stampColor: 'default',
+    customStampColor: null,
+    customFieldsEnabled: {},
     showSignature: false,
     showPhoto: false,
     showRedaction: true,
@@ -174,6 +178,24 @@ export function applyFlavourDefaults() {
     if (!state.footerLeft) {
       state.footerLeft = flavour.footerDefault;
     }
+  }
+}
+
+/**
+ * Set custom stamp colour (Priority 6)
+ */
+export function setCustomStampColor(hexColor) {
+  state.customStampColor = hexColor && hexColor !== '#ffffff' ? hexColor : null;
+}
+
+/**
+ * Toggle custom field visibility for template (Priority 7)
+ */
+export function toggleCustomField(fieldId) {
+  if (state.customFieldsEnabled[fieldId] === undefined) {
+    state.customFieldsEnabled[fieldId] = true;
+  } else {
+    state.customFieldsEnabled[fieldId] = !state.customFieldsEnabled[fieldId];
   }
 }
 

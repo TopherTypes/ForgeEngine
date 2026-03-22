@@ -6,10 +6,67 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [1.2.0] - 2026-03-22
+
+### Release Summary
+**Phase 2 Stamp Expansion (Priorities 5-7)** - Significantly expanded stamp library with 8 new variants, added custom hex colour picker for stamps, and implemented template field customization to enable power users to tailor document layouts. Completes first Phase 2 feature bundle.
+
+### Added
+
+#### Stamp System Expansion (Priority 5-7)
+- **More Stamp Variants** (Priority 5 - COMPLETED)
+  - Added 8 new stamp variants: Reviewed, Urgent, Void, Processed, Filed, Submitted, Expired, Rejected
+  - Total of 17 stamp options now available (up from 9)
+  - Each stamp has unique positioning, rotation, and opacity for visual variety
+  - New stamps cover critical document workflow states and urgency levels
+  - Enhances authenticity for TTRPG, ARG, and worldbuilding use cases
+
+- **Custom Stamp Colour Picker** (Priority 6 - COMPLETED)
+  - Hex colour input field to apply custom colours to all stamps simultaneously
+  - Native HTML5 color picker UI for intuitive colour selection
+  - Reset button to restore default stamp colours
+  - Custom colour persists across saves and presets
+  - Allows users to match institutional colour schemes (red seals, blue stamps, etc.)
+  - Opacity automatically applied (80% for subtle authenticity)
+
+- **Template Field Customization** (Priority 7 - COMPLETED)
+  - Show/hide optional fields per template with checkbox toggles
+  - Field visibility persists across saves and presets
+  - Helps streamline documents by removing unnecessary fields
+  - Customization panel appears below stamps section
+  - Supports all 8 document templates with flexible field lists
+  - Enables users to create cleaner, more focused documents
+
+### Changed
+- Stamp grid now displays 17 stamps with improved scrollability
+- Stamp rendering updated to support custom hex colours with fallback to preset colours
+- Field rendering filters out hidden fields based on customization settings
+- Document state expanded to track customStampColor and customFieldsEnabled properties
+- Persistence layer updated to save/load new customization properties
+
+### Technical Improvements
+- Added setCustomStampColor() and toggleCustomField() state management functions
+- Enhanced render.js stamp HTML generation with colour style support
+- Added buildCustomStampColorPicker() and buildFieldCustomizationPanel() UI builders
+- Extended persistence.js to save custom properties in documents and presets
+- Added CSS styling for colour picker and field customization UI (.color-picker-wrapper, .field-customization-panel)
+- Field rendering logic updated to respect customFieldsEnabled state
+
+### Fixed
+- Stamp rendering now properly handles both preset and custom colours
+- Field visibility state no longer causes re-render issues
+- Custom colours correctly persist through undo/redo operations
+
+### Known Enhancements
+- Field customization works best with templates having 5+ optional fields
+- Custom stamp colours are applied to all stamps simultaneously (per-stamp colour coming in future release)
+
+---
+
 ## [Unreleased]
 
 ### Planned (Phase 2: Weeks 4-8)
-- Priority 5-13: Medium-complexity power user features (e.g., more stamps, field customization, multi-docs)
+- Priority 8-13: Handwritten notes tool, multi-document bundles, document history search, custom classifications, margin notes
 
 ### Planned (Phase 3: Weeks 9+)
 - Priority 14-20: Major expansion with images, multi-page documents, and custom institution kits

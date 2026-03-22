@@ -2,9 +2,9 @@
 //  APP INITIALIZATION & EVENT HANDLING
 // ════════════════════════════════════════════════════════════════════════════════
 
-import { state, setTemplate, setFlavour, setField, setStyle, toggleStamp, setPaper, setInk, setStampColor, applyFlavourDefaults, restoreState } from './state.js';
+import { state, setTemplate, setFlavour, setField, setStyle, toggleStamp, setPaper, setInk, setStampColor, applyFlavourDefaults, restoreState, setCustomStampColor, toggleCustomField } from './state.js';
 import { updatePreview } from './render.js';
-import { buildTemplateGrid, buildSwatches, buildStampGrid, buildStampColorSwatches, buildContentFields, buildSaveModal, buildPresetModal, openSaveModal, closeSaveModal, openLoadModal, closeLoadModal, openPresetModal, closePresetModal, openTemplateHelpModal, closeTemplateHelpModal, openDuplicateModal, closeDuplicateModal, buildPresetOverrideModal, openPresetOverrideModal, closePresetOverrideModal } from './ui.js';
+import { buildTemplateGrid, buildSwatches, buildStampGrid, buildStampColorSwatches, buildCustomStampColorPicker, buildFieldCustomizationPanel, buildContentFields, buildSaveModal, buildPresetModal, openSaveModal, closeSaveModal, openLoadModal, closeLoadModal, openPresetModal, closePresetModal, openTemplateHelpModal, closeTemplateHelpModal, openDuplicateModal, closeDuplicateModal, buildPresetOverrideModal, openPresetOverrideModal, closePresetOverrideModal } from './ui.js';
 import { saveDocument, loadDocuments, loadDocument, deleteDocument, duplicateDocument, savePreset, loadPresets, loadPreset, deletePreset, searchAndFilterPresets, sortPresets, getAllPresetTags, getAllPresetFlavours } from './persistence.js';
 import { exportPrint, exportPNG } from './export.js';
 import { showToast, toggleSwitch, validateFields } from './utils.js';
@@ -20,6 +20,8 @@ export function init() {
   buildSwatches(state, handlePaperSelect, handleInkSelect);
   buildStampGrid(state, handleStampToggle);
   buildStampColorSwatches(state, handleStampColorSelect);
+  buildCustomStampColorPicker(state, handleCustomStampColorChange);
+  buildFieldCustomizationPanel(state, handleFieldCustomizationChange);
 
   // Set default template and apply defaults
   setTemplate('memo');
@@ -44,6 +46,7 @@ function handleTemplateSelect(templateId) {
   document.querySelectorAll('.template-card').forEach(c => {
     c.classList.toggle('active', c.dataset.id === templateId);
   });
+  buildFieldCustomizationPanel(state, handleFieldCustomizationChange);
   buildContentFields(state, handleFieldSync);
   applyFlavourDefaults();
   updatePreview(state);
@@ -88,6 +91,27 @@ function handleStampColorSelect(colorId) {
   buildStampColorSwatches(state, handleStampColorSelect);
   updatePreview(state);
   captureUndoSnapshot('Changed stamp color');
+}
+
+/**
+ * Custom stamp colour handler (Priority 6)
+ */
+function handleCustomStampColorChange(hexColor) {
+  setCustomStampColor(hexColor);
+  buildCustomStampColorPicker(state, handleCustomStampColorChange);
+  updatePreview(state);
+  captureUndoSnapshot('Changed custom stamp color');
+}
+
+/**
+ * Field customization handler (Priority 7)
+ */
+function handleFieldCustomizationChange(fieldId, enabled) {
+  toggleCustomField(fieldId);
+  buildFieldCustomizationPanel(state, handleFieldCustomizationChange);
+  buildContentFields(state, handleFieldSync);
+  updatePreview(state);
+  captureUndoSnapshot(`Toggled field: ${fieldId}`);
 }
 
 /**

@@ -196,8 +196,17 @@ export function updatePreview(state) {
   // ── Stamps & Overlays ──
   let stampHtml = '';
   state.stamps.forEach(s => {
-    const colorClass = state.stampColor !== 'default' ? ` stamp-color-${state.stampColor}` : '';
-    stampHtml += `<div class="stamp-overlay stamp-${s}${colorClass}">${s.charAt(0).toUpperCase() + s.slice(1)}</div>`;
+    let colorStyle = '';
+    let colorClass = '';
+    if (state.customStampColor) {
+      // Priority 6: Apply custom hex color with varying opacity
+      const customColor = state.customStampColor;
+      colorStyle = ` style="color: ${customColor}80 !important; border-color: ${customColor}80 !important;"`;
+    } else if (state.stampColor !== 'default') {
+      // Fall back to preset colors
+      colorClass = ` stamp-color-${state.stampColor}`;
+    }
+    stampHtml += `<div class="stamp-overlay stamp-${s}${colorClass}"${colorStyle}>${s.charAt(0).toUpperCase() + s.slice(1)}</div>`;
   });
 
   // ── Effects: Page Wear & Photocopy Noise ──

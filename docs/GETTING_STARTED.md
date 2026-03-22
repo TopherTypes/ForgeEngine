@@ -75,8 +75,14 @@ In the **right panel**, adjust:
 - Photo Placeholder: Adds photo area
 
 **Stamps**
-- Click any stamp name to toggle: Approved, Denied, Confidential, etc.
+- Click any stamp name to toggle: Approved, Denied, Confidential, Internal, Archived, Redacted, Evidence, Copy, Draft, Reviewed, Urgent, Void, Processed, Filed, Submitted, Expired, Rejected
 - Choose stamp color: Default, Red, Blue, Black, Faded
+- **Custom Stamp Colour** (v1.2.0+): Use the hex colour picker to apply a custom colour to all stamps simultaneously
+
+**Customize Fields** (v1.2.0+)
+- Show/hide optional fields in your document to streamline layout
+- Toggle checkboxes next to each field name
+- Hidden fields won't appear in the document preview or export
 
 **Redaction**
 - Toggle to show/hide redaction bars

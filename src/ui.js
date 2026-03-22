@@ -96,6 +96,76 @@ export function buildStampColorSwatches(state, onStampColorSelect) {
 }
 
 /**
+ * Build custom stamp colour picker (Priority 6)
+ */
+export function buildCustomStampColorPicker(state, onCustomColorChange) {
+  const container = document.getElementById('customStampColorContainer');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="control-group">
+      <label class="control-label">Custom Stamp Colour</label>
+      <div class="color-picker-wrapper">
+        <input type="color" id="customStampColorInput" class="color-input" value="${state.customStampColor || '#b40000'}" />
+        <button id="resetCustomStampColor" class="btn-small">Reset</button>
+      </div>
+      <small class="help-text">Apply a custom hex colour to all stamps</small>
+    </div>
+  `;
+
+  const input = document.getElementById('customStampColorInput');
+  const resetBtn = document.getElementById('resetCustomStampColor');
+
+  input.addEventListener('change', (e) => {
+    onCustomColorChange(e.target.value);
+  });
+
+  resetBtn.addEventListener('click', () => {
+    onCustomColorChange(null);
+    input.value = '#b40000';
+  });
+}
+
+/**
+ * Build template field customization panel (Priority 7)
+ */
+export function buildFieldCustomizationPanel(state, onFieldCustomizationChange) {
+  const container = document.getElementById('fieldCustomizationContainer');
+  const section = document.getElementById('fieldCustomizationSection');
+  if (!container || !section) return;
+
+  const template = TEMPLATES[state.template];
+  if (!template || template.fields.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+
+  let html = '<div class="field-customization-panel"><label class="control-label">Show/Hide Fields</label><div class="field-toggles">';
+
+  template.fields.forEach(fieldId => {
+    const fieldLabel = FIELD_LABELS[fieldId] || fieldId;
+    const isEnabled = state.customFieldsEnabled[fieldId] !== false; // Default to true if not set
+    const checked = isEnabled ? 'checked' : '';
+    html += `
+      <label class="field-toggle">
+        <input type="checkbox" data-field="${fieldId}" ${checked} />
+        <span>${esc(fieldLabel)}</span>
+      </label>
+    `;
+  });
+
+  html += '</div></div>';
+  container.innerHTML = html;
+  section.style.display = 'block';
+
+  container.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+    checkbox.addEventListener('change', (e) => {
+      onFieldCustomizationChange(e.target.dataset.field, e.target.checked);
+    });
+  });
+}
+
+/**
  * Build content input fields based on template
  * Includes validation with visual error feedback (Gap 2)
  */
@@ -104,6 +174,11 @@ export function buildContentFields(state, onFieldSync) {
   container.innerHTML = '';
   const t = TEMPLATES[state.template];
   t.fields.forEach(fid => {
+    // Priority 7: Skip fields that are disabled via customization
+    if (state.customFieldsEnabled[fid] === false) {
+      return;
+    }
+
     const div = document.createElement('div');
     div.className = 'field';
     const label = FIELD_LABELS[fid] || fid;
