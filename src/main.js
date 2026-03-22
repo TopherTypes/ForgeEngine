@@ -8,6 +8,7 @@ import { buildTemplateGrid, buildSwatches, buildStampGrid, buildStampColorSwatch
 import { saveDocument, loadDocuments, loadDocument, deleteDocument, savePreset, loadPresets, loadPreset, deletePreset } from './persistence.js';
 import { exportPrint, exportPNG } from './export.js';
 import { showToast, toggleSwitch } from './utils.js';
+import { captureUndoSnapshot, performUndo, performRedo, updateUndoRedoButtonStates, createDebouncedSnapshot, clearUndoRedoStacks } from './undoredo.js';
 
 /**
  * Initialize the application
@@ -45,6 +46,7 @@ function handleTemplateSelect(templateId) {
   buildContentFields(state, handleFieldSync);
   applyFlavourDefaults();
   updatePreview(state);
+  captureUndoSnapshot('Changed template');
 }
 
 /**
@@ -54,6 +56,7 @@ function handlePaperSelect(paperId) {
   setPaper(paperId);
   buildSwatches(state, handlePaperSelect, handleInkSelect);
   updatePreview(state);
+  captureUndoSnapshot('Changed paper tone');
 }
 
 /**
@@ -63,6 +66,7 @@ function handleInkSelect(inkId) {
   setInk(inkId);
   buildSwatches(state, handlePaperSelect, handleInkSelect);
   updatePreview(state);
+  captureUndoSnapshot('Changed ink tone');
 }
 
 /**
@@ -72,6 +76,7 @@ function handleStampToggle(stampName) {
   toggleStamp(stampName);
   buildStampGrid(state, handleStampToggle);
   updatePreview(state);
+  captureUndoSnapshot('Toggled stamp');
 }
 
 /**
@@ -81,6 +86,7 @@ function handleStampColorSelect(colorId) {
   setStampColor(colorId);
   buildStampColorSwatches(state, handleStampColorSelect);
   updatePreview(state);
+  captureUndoSnapshot('Changed stamp color');
 }
 
 /**
@@ -95,6 +101,13 @@ function handleFieldSync(fieldId, value) {
  * Attach listeners to all form controls
  */
 function attachFormListeners() {
+  // Create debounced snapshot functions for text inputs
+  const debouncedFooterSnapshot = createDebouncedSnapshot('Edited footer', 500);
+  const debouncedNotesSnapshot = createDebouncedSnapshot('Edited notes', 500);
+  const debouncedAttachmentsSnapshot = createDebouncedSnapshot('Edited attachments', 500);
+  const debouncedPageWearSnapshot = createDebouncedSnapshot('Adjusted page wear', 300);
+  const debouncedPhotoNoiseSnapshot = createDebouncedSnapshot('Adjusted photo noise', 300);
+
   // Flavour select
   const flavourSelect = document.getElementById('flavourSelect');
   if (flavourSelect) {
@@ -108,6 +121,7 @@ function attachFormListeners() {
         document.getElementById('field_department').value = f.department;
       }
       updatePreview(state);
+      captureUndoSnapshot('Changed institutional flavour');
     });
   }
 
@@ -117,6 +131,7 @@ function attachFormListeners() {
     classificationSelect.addEventListener('change', () => {
       state.classification = classificationSelect.value;
       updatePreview(state);
+      captureUndoSnapshot('Changed classification');
     });
   }
 
@@ -126,6 +141,7 @@ function attachFormListeners() {
     densitySelect.addEventListener('change', () => {
       state.density = densitySelect.value;
       updatePreview(state);
+      captureUndoSnapshot('Changed text density');
     });
   }
 
@@ -135,6 +151,7 @@ function attachFormListeners() {
     headerAlign.addEventListener('change', () => {
       state.headerAlign = headerAlign.value;
       updatePreview(state);
+      captureUndoSnapshot('Changed header alignment');
     });
   }
 
@@ -144,24 +161,27 @@ function attachFormListeners() {
     borderStyle.addEventListener('change', () => {
       state.border = borderStyle.value;
       updatePreview(state);
+      captureUndoSnapshot('Changed border style');
     });
   }
 
-  // Page wear slider
+  // Page wear slider (debounced)
   const pageWear = document.getElementById('pageWear');
   if (pageWear) {
     pageWear.addEventListener('input', () => {
       state.pageWear = parseInt(pageWear.value);
       updatePreview(state);
+      debouncedPageWearSnapshot();
     });
   }
 
-  // Photo noise slider
+  // Photo noise slider (debounced)
   const photoNoise = document.getElementById('photoNoise');
   if (photoNoise) {
     photoNoise.addEventListener('input', () => {
       state.photoNoise = parseInt(photoNoise.value);
       updatePreview(state);
+      debouncedPhotoNoiseSnapshot();
     });
   }
 
@@ -172,6 +192,7 @@ function attachFormListeners() {
       toggleSwitch(sigToggle);
       state.showSignature = sigToggle.classList.contains('active');
       updatePreview(state);
+      captureUndoSnapshot('Toggled signature');
     });
   }
 
@@ -181,6 +202,7 @@ function attachFormListeners() {
       toggleSwitch(photoToggle);
       state.showPhoto = photoToggle.classList.contains('active');
       updatePreview(state);
+      captureUndoSnapshot('Toggled photo');
     });
   }
 
@@ -190,15 +212,17 @@ function attachFormListeners() {
       toggleSwitch(redactionToggle);
       state.showRedaction = redactionToggle.classList.contains('active');
       updatePreview(state);
+      captureUndoSnapshot('Toggled redaction');
     });
   }
 
-  // Footer inputs
+  // Footer inputs (debounced)
   const footerLeft = document.getElementById('footerLeft');
   if (footerLeft) {
     footerLeft.addEventListener('input', () => {
       state.footerLeft = footerLeft.value;
       updatePreview(state);
+      debouncedFooterSnapshot();
     });
   }
 
@@ -207,15 +231,17 @@ function attachFormListeners() {
     footerRight.addEventListener('input', () => {
       state.footerRight = footerRight.value;
       updatePreview(state);
+      debouncedFooterSnapshot();
     });
   }
 
-  // Notes and attachments
+  // Notes and attachments (debounced)
   const docNotes = document.getElementById('docNotes');
   if (docNotes) {
     docNotes.addEventListener('input', () => {
       state.notes = docNotes.value;
       updatePreview(state);
+      debouncedNotesSnapshot();
     });
   }
 
@@ -224,6 +250,7 @@ function attachFormListeners() {
     docAttachments.addEventListener('input', () => {
       state.attachments = docAttachments.value;
       updatePreview(state);
+      debouncedAttachmentsSnapshot();
     });
   }
 }
@@ -252,6 +279,7 @@ function attachModalListeners() {
       buildSaveModal(docs, (docId) => {
         const doc = loadDocument(docId);
         if (doc) {
+          clearUndoRedoStacks();
           restoreState(doc);
           buildContentFields(state, handleFieldSync);
           updatePreview(state);
@@ -337,6 +365,29 @@ function attachModalListeners() {
   });
   document.getElementById('presetModal')?.addEventListener('click', (e) => {
     if (e.target.id === 'presetModal') closePresetModal();
+  });
+
+  // Undo/Redo buttons
+  const undoBtn = document.getElementById('undoBtn');
+  if (undoBtn) {
+    undoBtn.addEventListener('click', performUndo);
+  }
+
+  const redoBtn = document.getElementById('redoBtn');
+  if (redoBtn) {
+    redoBtn.addEventListener('click', performRedo);
+  }
+
+  // Keyboard shortcuts for undo/redo
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+      e.preventDefault();
+      performUndo();
+    }
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'z'))) {
+      e.preventDefault();
+      performRedo();
+    }
   });
 }
 
