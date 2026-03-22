@@ -158,6 +158,82 @@ export const STAMP_COLORS = [
 
 3. Refresh - new color appears in UI
 
+### Adding Field Validation Constraints (Gap 2)
+
+Field validation prevents invalid data from being saved. All fields have constraints defined in `FIELD_CONSTRAINTS` in `src/constants.js`.
+
+#### To add validation for a new field:
+
+1. Edit `src/constants.js` and add to `FIELD_CONSTRAINTS`:
+```javascript
+export const FIELD_CONSTRAINTS = {
+  // ... existing constraints ...
+  myNewField: {
+    maxLength: 200,      // Maximum characters (required)
+    minLength: 0,        // Minimum characters (optional)
+    type: 'text'         // Type: 'text', 'richtext', 'date', 'time'
+  }
+};
+```
+
+2. Field validation runs automatically on blur and before save
+3. Error messages appear below invalid fields with red styling
+
+#### Constraint types:
+- `maxLength`: Maximum number of characters allowed
+- `minLength`: Minimum number of characters required
+- `type`: Field type ('text', 'richtext', 'date' [YYYY-MM-DD], 'time' [HH:MM])
+
+#### Validation in code:
+- Validation runs in `buildContentFields()` (src/ui.js)
+- Errors display via `displayFieldError()` function
+- Save operation blocked by `validateAllFields()` in src/main.js
+
+### Managing Presets (Priority 4)
+
+Presets save and restore all document styling (but not content). Users can save current styles, apply them to new documents, and manage presets via the Presets modal.
+
+#### Preset Structure:
+
+```javascript
+{
+  id: 'timestamp',
+  name: 'My Preset',
+  description: 'Optional description',
+  template: 'memo',
+  flavour: 'government',
+  paper: 'cream',
+  ink: 'black',
+  density: 'normal',
+  stamps: ['Approved'],
+  stampColor: 'red',
+  // ... all other style properties
+  metadata: {
+    tags: ['official', 'government'],
+    category: 'custom',
+    createdDate: 1711200000000,
+    lastUsed: 1711286400000,
+    useFrequency: 5
+  }
+}
+```
+
+#### To enhance preset functionality:
+
+1. **Add preset metadata**: Edit `savePreset()` in `src/persistence.js`
+2. **Change sort order**: Edit `sortPresets()` in `src/persistence.js`
+3. **Add new filter**: Edit `searchAndFilterPresets()` in `src/persistence.js`
+4. **Modify preset UI**: Edit `buildPresetModal()` in `src/ui.js`
+
+#### Preset functions in persistence.js:
+- `savePreset(name, state, metadata)` - Save current styling as preset
+- `loadPreset(presetId)` - Load preset and update usage metrics
+- `loadPresets()` - Get all saved presets
+- `deletePreset(presetId)` - Remove preset
+- `searchAndFilterPresets(query, filters)` - Search by name/description/tags
+- `sortPresets(presets, sortBy)` - Sort: 'alphabetical', 'recent', 'frequency', 'custom'
+- `getAllPresetTags()` - Get unique tags from all presets
+
 ## Testing
 
 ### Manual Testing Checklist
@@ -171,6 +247,32 @@ Before committing changes:
 6. ✅ PNG export produces valid image
 7. ✅ Print/PDF exports correctly
 8. ✅ No console errors (F12 → Console)
+
+### Field Validation Testing (Gap 2)
+
+Test field validation before changes:
+1. ✅ Enter text exceeding maxLength in each field type
+2. ✅ Verify error message appears below field with red styling
+3. ✅ Try to save document with invalid field - save should be blocked with error toast
+4. ✅ Fix invalid field and retry save - should succeed
+5. ✅ Test date field with invalid format (e.g., "invalid") - should show format error
+6. ✅ Test time field with invalid format - should show format error
+7. ✅ Verify validation clears when user starts typing to fix error
+8. ✅ Test all 8 templates have validation for their specific fields
+
+### Preset Testing (Priority 4)
+
+Test preset functionality:
+1. ✅ Create preset from current styling (Save Preset button)
+2. ✅ Load preset and verify all styles applied
+3. ✅ Load preset and verify content fields NOT affected
+4. ✅ Test Override Fields button - select fields to apply
+5. ✅ Test preset search - find preset by name
+6. ✅ Test preset sort - alphabetical, recent, frequency
+7. ✅ Test preset tags - filter by tag
+8. ✅ Delete preset - verify removed from list
+9. ✅ Usage metrics - verify frequency increases after applying preset
+10. ✅ Test preset modal responsive to window size
 
 ### Browser Testing
 

@@ -7,7 +7,8 @@ import { updatePreview } from './render.js';
 import { buildTemplateGrid, buildSwatches, buildStampGrid, buildStampColorSwatches, buildContentFields, buildSaveModal, buildPresetModal, openSaveModal, closeSaveModal, openLoadModal, closeLoadModal, openPresetModal, closePresetModal, openTemplateHelpModal, closeTemplateHelpModal, openDuplicateModal, closeDuplicateModal, buildPresetOverrideModal, openPresetOverrideModal, closePresetOverrideModal } from './ui.js';
 import { saveDocument, loadDocuments, loadDocument, deleteDocument, duplicateDocument, savePreset, loadPresets, loadPreset, deletePreset, searchAndFilterPresets, sortPresets, getAllPresetTags, getAllPresetFlavours } from './persistence.js';
 import { exportPrint, exportPNG } from './export.js';
-import { showToast, toggleSwitch } from './utils.js';
+import { showToast, toggleSwitch, validateFields } from './utils.js';
+import { FIELD_CONSTRAINTS, TEMPLATES } from './constants.js';
 import { captureUndoSnapshot, performUndo, performRedo, updateUndoRedoButtonStates, createDebouncedSnapshot, clearUndoRedoStacks } from './undoredo.js';
 
 /**
@@ -362,13 +363,41 @@ function handleApplyPresetWithOverride(presetId) {
 }
 
 /**
+ * Validate all fields in the current template (Gap 2)
+ * @returns {object} { valid: boolean, fieldErrors: {fieldId: [errors]} }
+ */
+function validateAllFields() {
+  const template = TEMPLATES[state.template];
+  if (!template) return { valid: true, fieldErrors: {} };
+
+  // Build constraints object for current template fields only
+  const relevantConstraints = {};
+  template.fields.forEach(fieldId => {
+    if (FIELD_CONSTRAINTS[fieldId]) {
+      relevantConstraints[fieldId] = FIELD_CONSTRAINTS[fieldId];
+    }
+  });
+
+  // Validate all fields
+  return validateFields(state.fields, relevantConstraints);
+}
+
+/**
  * Attach modal event listeners
  */
 function attachModalListeners() {
-  // Save button
+  // Save button with validation (Gap 2)
   const saveBtn = document.getElementById('saveBtn');
   if (saveBtn) {
     saveBtn.addEventListener('click', () => {
+      // Validate all fields before saving (Gap 2)
+      const validation = validateAllFields();
+      if (!validation.valid) {
+        const errorCount = Object.keys(validation.fieldErrors).length;
+        showToast(`Cannot save: ${errorCount} field(s) have validation error${errorCount > 1 ? 's' : ''}`);
+        return;
+      }
+
       const name = prompt('Document name:', state.fields.title || 'Untitled');
       if (name) {
         saveDocument(name, state);

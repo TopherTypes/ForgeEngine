@@ -146,6 +146,21 @@ body {
 .field textarea { resize: vertical; min-height: 60px; line-height: 1.5; }
 .field select { cursor: pointer; }
 
+/* ── FIELD VALIDATION (Gap 2) ── */
+.field.has-error input,
+.field.has-error textarea {
+  border-color: #d9534f;
+  background-color: #f9ede8;
+}
+
+.field-error {
+  display: none;
+  color: #d9534f;
+  font-size: 11px;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
 .field-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
