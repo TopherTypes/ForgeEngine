@@ -153,34 +153,128 @@ export function buildSaveModal(docs, onLoad, onDuplicate, onDelete) {
 }
 
 /**
- * Build preset modal
+ * Build preset modal with search, filter, and sort (Gap 8)
  */
-export function buildPresetModal(presets, onLoad, onDelete) {
+export function buildPresetModal(presets, onLoad, onDelete, onApplyWithOverride) {
   const list = document.getElementById('presetList');
   list.innerHTML = '';
+
   if (presets.length === 0) {
     list.innerHTML = '<p style="opacity:0.5;text-align:center;padding:20px">No saved presets yet</p>';
     return;
   }
+
+  // Build preset items
+  const presetsGrid = document.createElement('div');
+  presetsGrid.className = 'preset-grid';
+
   presets.forEach(preset => {
     const div = document.createElement('div');
-    div.className = 'save-item';
+    div.className = 'preset-card';
+    const created = preset.created ? new Date(preset.created).toLocaleDateString() : 'Unknown';
+    const frequency = preset.metadata?.useFrequency || 0;
+    const lastUsed = preset.metadata?.lastUsed
+      ? new Date(preset.metadata.lastUsed).toLocaleDateString()
+      : 'Never';
+    const tags = (preset.metadata?.tags || []).join(', ');
+
     div.innerHTML = `
-      <div>
-        <div class="si-name">${preset.name}</div>
-        <div class="si-meta">${new Date(preset.created).toLocaleDateString()}</div>
+      <div class="preset-card-header">
+        <div class="preset-name">${esc(preset.name)}</div>
+        <div class="preset-desc">${esc(preset.description || 'No description')}</div>
       </div>
-      <div class="si-actions">
-        <button class="btn btn-sm" onclick="">Apply</button>
-        <button class="btn btn-sm btn-danger" onclick="">Delete</button>
+      <div class="preset-meta">
+        <div class="meta-row">
+          <span class="meta-label">Created:</span> ${created}
+        </div>
+        <div class="meta-row">
+          <span class="meta-label">Used:</span> ${frequency}x | Last: ${lastUsed}
+        </div>
+        ${tags ? `<div class="meta-row"><span class="meta-label">Tags:</span> ${esc(tags)}</div>` : ''}
+      </div>
+      <div class="preset-actions">
+        <button class="btn btn-sm btn-primary">Apply</button>
+        <button class="btn btn-sm">Override Fields</button>
+        <button class="btn btn-sm btn-danger">Delete</button>
       </div>
     `;
-    const loadBtn = div.querySelector('button:first-of-type');
-    const delBtn = div.querySelector('button:last-of-type');
-    loadBtn.onclick = () => onLoad(preset.id);
+
+    const applyBtn = div.querySelector('.btn-primary');
+    const overrideBtn = div.querySelectorAll('.btn-sm')[1];
+    const delBtn = div.querySelector('.btn-danger');
+
+    applyBtn.onclick = () => onLoad(preset.id);
+    overrideBtn.onclick = () => onApplyWithOverride(preset.id);
     delBtn.onclick = () => onDelete(preset.id);
-    list.appendChild(div);
+
+    presetsGrid.appendChild(div);
   });
+
+  list.appendChild(presetsGrid);
+}
+
+/**
+ * Build preset override modal
+ */
+export function buildPresetOverrideModal(presetId, currentState, fields, onApply, onCancel) {
+  const fieldsList = document.getElementById('overrideFieldsList');
+  fieldsList.innerHTML = '';
+
+  const checkboxesContainer = document.createElement('div');
+  checkboxesContainer.className = 'override-checkboxes';
+
+  // Create checkboxes for each field
+  Object.keys(fields).forEach(fieldId => {
+    if (fieldId === 'notes' || fieldId === 'attachments') return; // Skip these
+
+    const label = document.createElement('label');
+    label.className = 'checkbox-label';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = true;
+    checkbox.dataset.fieldId = fieldId;
+
+    const currentValue = currentState.fields?.[fieldId] || '';
+    const labelText = document.createElement('span');
+    labelText.innerHTML = `<strong>${esc(fieldId)}</strong>: ${esc(currentValue.substring(0, 50))}`;
+
+    label.appendChild(checkbox);
+    label.appendChild(labelText);
+    checkboxesContainer.appendChild(label);
+  });
+
+  fieldsList.appendChild(checkboxesContainer);
+
+  // Wire up action buttons
+  const applyBtn = document.getElementById('applyPresetOverride');
+  const cancelBtn = document.getElementById('cancelPresetOverride');
+
+  applyBtn.onclick = () => {
+    const overriddenFields = {};
+    document.querySelectorAll('.override-checkboxes input[type="checkbox"]').forEach(cb => {
+      if (cb.checked) {
+        overriddenFields[cb.dataset.fieldId] = true;
+      }
+    });
+    onApply(presetId, overriddenFields);
+  };
+
+  cancelBtn.onclick = onCancel;
+}
+
+/**
+ * Open preset override modal
+ */
+export function openPresetOverrideModal() {
+  document.getElementById('presetOverrideModal').classList.remove('hidden');
+}
+
+/**
+ * Close preset override modal
+ */
+export function closePresetOverrideModal() {
+  document.getElementById('presetOverrideModal').classList.add('hidden');
 }
 
 /**

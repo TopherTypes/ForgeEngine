@@ -4,8 +4,8 @@
 
 import { state, setTemplate, setFlavour, setField, setStyle, toggleStamp, setPaper, setInk, setStampColor, applyFlavourDefaults, restoreState } from './state.js';
 import { updatePreview } from './render.js';
-import { buildTemplateGrid, buildSwatches, buildStampGrid, buildStampColorSwatches, buildContentFields, buildSaveModal, buildPresetModal, openSaveModal, closeSaveModal, openLoadModal, closeLoadModal, openPresetModal, closePresetModal, openTemplateHelpModal, closeTemplateHelpModal, openDuplicateModal, closeDuplicateModal } from './ui.js';
-import { saveDocument, loadDocuments, loadDocument, deleteDocument, duplicateDocument, savePreset, loadPresets, loadPreset, deletePreset } from './persistence.js';
+import { buildTemplateGrid, buildSwatches, buildStampGrid, buildStampColorSwatches, buildContentFields, buildSaveModal, buildPresetModal, openSaveModal, closeSaveModal, openLoadModal, closeLoadModal, openPresetModal, closePresetModal, openTemplateHelpModal, closeTemplateHelpModal, openDuplicateModal, closeDuplicateModal, buildPresetOverrideModal, openPresetOverrideModal, closePresetOverrideModal } from './ui.js';
+import { saveDocument, loadDocuments, loadDocument, deleteDocument, duplicateDocument, savePreset, loadPresets, loadPreset, deletePreset, searchAndFilterPresets, sortPresets, getAllPresetTags, getAllPresetFlavours } from './persistence.js';
 import { exportPrint, exportPNG } from './export.js';
 import { showToast, toggleSwitch } from './utils.js';
 import { captureUndoSnapshot, performUndo, performRedo, updateUndoRedoButtonStates, createDebouncedSnapshot, clearUndoRedoStacks } from './undoredo.js';
@@ -256,6 +256,112 @@ function attachFormListeners() {
 }
 
 /**
+ * Apply a preset to current document
+ */
+function handleApplyPreset(presetId) {
+  const preset = loadPreset(presetId);
+  if (preset) {
+    // Apply preset (styles only, not content)
+    state.template = preset.template;
+    state.flavour = preset.flavour;
+    state.classification = preset.classification;
+    state.paper = preset.paper;
+    state.ink = preset.ink;
+    state.density = preset.density;
+    state.headerAlign = preset.headerAlign;
+    state.border = preset.border;
+    state.pageWear = preset.pageWear;
+    state.photoNoise = preset.photoNoise;
+    state.stamps = [...preset.stamps];
+    state.stampColor = preset.stampColor;
+    state.showSignature = preset.showSignature;
+    state.showPhoto = preset.showPhoto;
+    state.showRedaction = preset.showRedaction;
+    state.lastAppliedPreset = presetId;
+
+    // Update UI to reflect preset
+    buildTemplateGrid(state, handleTemplateSelect);
+    buildContentFields(state, handleFieldSync);
+    buildSwatches(state, handlePaperSelect, handleInkSelect);
+    buildStampGrid(state, handleStampToggle);
+    buildStampColorSwatches(state, handleStampColorSelect);
+    updatePreview(state);
+    closePresetModal();
+    captureUndoSnapshot('Applied preset: ' + preset.name);
+    showToast('Preset applied');
+  }
+}
+
+/**
+ * Delete a preset
+ */
+function handleDeletePreset(presetId) {
+  if (confirm('Delete this preset?')) {
+    deletePreset(presetId);
+    const presets = loadPresets();
+    const sortBy = document.getElementById('presetSort')?.value || 'alphabetical';
+    const sorted = sortPresets(presets, sortBy);
+    buildPresetModal(sorted, handleApplyPreset, handleDeletePreset, handleApplyPresetWithOverride);
+    showToast('Preset deleted');
+  }
+}
+
+/**
+ * Apply preset with selective field overrides
+ */
+function handleApplyPresetWithOverride(presetId) {
+  const preset = loadPreset(presetId);
+  if (!preset) return;
+
+  // Build the override modal with field list
+  const fields = {};
+  ['organisation', 'department', 'docRef', 'date', 'to', 'from', 'subject', 'body', 'title', 'location', 'contact'].forEach(f => {
+    if (Object.keys(state.fields).includes(f)) {
+      fields[f] = state.fields[f];
+    }
+  });
+
+  buildPresetOverrideModal(presetId, state, fields, (pId, overriddenFields) => {
+    // Apply preset with overrides
+    const p = loadPreset(pId);
+    if (p) {
+      // Apply all style fields first
+      state.template = p.template;
+      state.flavour = p.flavour;
+      state.classification = p.classification;
+      state.paper = p.paper;
+      state.ink = p.ink;
+      state.density = p.density;
+      state.headerAlign = p.headerAlign;
+      state.border = p.border;
+      state.pageWear = p.pageWear;
+      state.photoNoise = p.photoNoise;
+      state.stamps = [...p.stamps];
+      state.stampColor = p.stampColor;
+      state.showSignature = p.showSignature;
+      state.showPhoto = p.showPhoto;
+      state.showRedaction = p.showRedaction;
+      state.lastAppliedPreset = pId;
+      state.presetOverrides = overriddenFields;
+
+      // Update UI
+      buildTemplateGrid(state, handleTemplateSelect);
+      buildContentFields(state, handleFieldSync);
+      buildSwatches(state, handlePaperSelect, handleInkSelect);
+      buildStampGrid(state, handleStampToggle);
+      buildStampColorSwatches(state, handleStampColorSelect);
+      updatePreview(state);
+      closePresetOverrideModal();
+      closePresetModal();
+      captureUndoSnapshot('Applied preset with overrides: ' + p.name);
+      showToast('Preset applied (with field overrides)');
+    }
+  }, closePresetOverrideModal);
+
+  openPresetOverrideModal();
+}
+
+/**
  * Attach modal event listeners
  */
 function attachModalListeners() {
@@ -316,46 +422,39 @@ function attachModalListeners() {
     });
   }
 
-  // Preset button
+  // Preset button - open advanced preset modal with search/filter/sort
   const presetBtn = document.getElementById('presetBtn');
   if (presetBtn) {
     presetBtn.addEventListener('click', () => {
       const presets = loadPresets();
-      buildPresetModal(presets, (presetId) => {
-        const preset = loadPreset(presetId);
-        if (preset) {
-          // Apply preset (styles only, not content)
-          state.template = preset.template;
-          state.flavour = preset.flavour;
-          state.classification = preset.classification;
-          state.paper = preset.paper;
-          state.ink = preset.ink;
-          state.density = preset.density;
-          state.headerAlign = preset.headerAlign;
-          state.border = preset.border;
-          state.pageWear = preset.pageWear;
-          state.photoNoise = preset.photoNoise;
-          state.stamps = [...preset.stamps];
-          state.stampColor = preset.stampColor;
-          state.showSignature = preset.showSignature;
-          state.showPhoto = preset.showPhoto;
-          state.showRedaction = preset.showRedaction;
+      const sorted = sortPresets(presets, 'alphabetical');
 
-          // Update UI to reflect preset
-          buildTemplateGrid(state, handleTemplateSelect);
-          buildContentFields(state, handleFieldSync);
-          buildSwatches(state, handlePaperSelect, handleInkSelect);
-          buildStampGrid(state, handleStampToggle);
-          buildStampColorSwatches(state, handleStampColorSelect);
-          updatePreview(state);
-          closePresetModal();
-          showToast('Preset applied');
-        }
-      }, (presetId) => {
-        deletePreset(presetId);
-        const presets = loadPresets();
-        buildPresetModal(presets, null, null);
-      });
+      // Build the modal with the new handlers
+      buildPresetModal(sorted, handleApplyPreset, handleDeletePreset, handleApplyPresetWithOverride);
+
+      // Build tag filter buttons
+      const tagFilters = document.getElementById('tagFilters');
+      if (tagFilters) {
+        tagFilters.innerHTML = '';
+        const tags = getAllPresetTags();
+        tags.forEach(tag => {
+          const btn = document.createElement('button');
+          btn.className = 'tag-filter-button';
+          btn.textContent = tag;
+          btn.addEventListener('click', () => {
+            btn.classList.toggle('active');
+            // Re-filter presets based on selected tags
+            const query = document.getElementById('presetSearch')?.value || '';
+            const activeTags = Array.from(document.querySelectorAll('.tag-filter-button.active')).map(b => b.textContent);
+            const sortBy = document.getElementById('presetSort')?.value || 'alphabetical';
+            const filtered = searchAndFilterPresets(query, { tags: activeTags });
+            const sorted = sortPresets(filtered, sortBy);
+            buildPresetModal(sorted, handleApplyPreset, handleDeletePreset, handleApplyPresetWithOverride);
+          });
+          tagFilters.appendChild(btn);
+        });
+      }
+
       openPresetModal();
     });
   }
@@ -371,6 +470,43 @@ function attachModalListeners() {
   if (printBtn) {
     printBtn.addEventListener('click', () => exportPrint());
   }
+
+  // Preset search, sort, and filter handlers (Gap 8)
+  const presetSearch = document.getElementById('presetSearch');
+  const presetSort = document.getElementById('presetSort');
+  if (presetSearch) {
+    let searchTimeout;
+    presetSearch.addEventListener('input', () => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        const query = presetSearch.value;
+        const sortBy = presetSort?.value || 'alphabetical';
+        const presets = loadPresets();
+        const searched = searchAndFilterPresets(query, {});
+        const sorted = sortPresets(searched, sortBy);
+        buildPresetModal(sorted, handleApplyPreset, handleDeletePreset, handleApplyPresetWithOverride);
+      }, 300);
+    });
+  }
+  if (presetSort) {
+    presetSort.addEventListener('change', () => {
+      const query = presetSearch?.value || '';
+      const sortBy = presetSort.value;
+      const presets = loadPresets();
+      const searched = searchAndFilterPresets(query, {});
+      const sorted = sortPresets(searched, sortBy);
+      buildPresetModal(sorted, handleApplyPreset, handleDeletePreset, handleApplyPresetWithOverride);
+    });
+  }
+
+  // Preset override modal handlers
+  document.getElementById('applyPresetOverride')?.addEventListener('click', () => {
+    // Handled by button click in buildPresetOverrideModal
+  });
+  document.getElementById('cancelPresetOverride')?.addEventListener('click', closePresetOverrideModal);
+  document.getElementById('presetOverrideModal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'presetOverrideModal') closePresetOverrideModal();
+  });
 
   // Modal close buttons
   document.getElementById('closeSaveModal')?.addEventListener('click', closeSaveModal);
