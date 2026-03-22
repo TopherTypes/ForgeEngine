@@ -13,10 +13,11 @@ The roadmap balances three strategic goals:
 
 ## Strategic Development Phases
 
-### Phase 1: Quick Wins (Weeks 1-3)
+### Phase 1: Quick Wins (Weeks 1-3) ✅ COMPLETE
+**Status**: Phase 1 completed on 2026-03-22 with 3 of 7 planned features implemented.
 **Target**: Address top user friction points with minimal code changes. Estimated 40% of user feedback resolved.
 
-Features 1-7 focus on enhancing existing functionality without breaking changes or architectural refactoring.
+Features 1-3 completed; Features 4-7 remain for future phases.
 
 ### Phase 2: Power User Focus (Weeks 4-8)
 **Target**: Unlock new use cases for advanced users and specific communities (TTRPG, ARG, worldbuilding).
@@ -30,85 +31,48 @@ Features 14-20 involve significant architectural changes (multi-page rendering, 
 
 ---
 
-## 20 Prioritized Features
+## Completed Features History
 
-### Priority 1: Undo/Redo Stack ✅ COMPLETED
-**Status**: Completed on 2026-03-22
+The following features have been successfully implemented and are now part of ForgeEngine's core functionality.
+
+### ✅ Priority 1: Undo/Redo Stack
+**Completed**: 2026-03-22
 **Category**: Quality of Life
-**Description**: Add browser-native undo/redo functionality to recent document edits without requiring save/load cycles.
-**Rationale**: Users frequently experiment with styling and content. Reduces friction and encourages iteration.
-**Effort**: Low
-**Impact**: High
-**Target Users**: All
-**Implementation Details**:
-- Created `src/undoredo.js` with `UndoRedoManager` class managing dual undo/redo stacks (max 50 snapshots)
+**Impact**: High - Users can now experiment with styling and content without fear of losing work
+**Summary**:
+- Implemented `UndoRedoManager` class in `src/undoredo.js` with dual undo/redo stacks (max 50 snapshots)
 - Added keyboard shortcuts: Ctrl+Z (Undo), Ctrl+Y or Ctrl+Shift+Z (Redo)
-- Added Undo/Redo buttons in header that enable/disable based on stack state
-- Integrated snapshot capture at handler level (not individual setters) to avoid excessive snapshots
-- Implemented debouncing for rapid mutations (text inputs: 500ms, sliders: 300ms)
-- Toast notifications show action descriptions (e.g., "↶ Changed template")
-- Stacks clear when loading a saved document (fresh start)
+- Added Undo/Redo buttons in header with dynamic enable/disable based on stack state
+- Integrated debouncing for rapid mutations (text: 500ms, sliders: 300ms)
+- Toast notifications display action descriptions
 
-**Next Priority**: Priority 3: Document Duplication
-
----
-
-### Priority 2: Quick Template Library with Descriptions ✅ COMPLETED
-**Status**: Completed on 2026-03-22
+### ✅ Priority 2: Quick Template Library with Descriptions
+**Completed**: 2026-03-22
 **Category**: Enhancement
-**Description**: Expand template grid with hover tooltips showing example use cases and quick-start tips for each template.
-**Rationale**: Reduces user confusion about template selection, especially for new users. Improves onboarding.
-**Effort**: Low
-**Impact**: Medium
-**Target Users**: Beginners
-**Implementation Details**:
-- Extended TEMPLATES data structure in constants.js with three new fields per template:
-  - `description`: One-line summary of template purpose
-  - `useCases`: Array of 2-3 realistic use cases for each template
-  - `quickTip`: Brief beginner-friendly guidance
-- Updated buildTemplateGrid() in ui.js to:
-  - Add native HTML `title` attribute for browser tooltips on hover
-  - Render small "?" help icon in top-right corner of each template card
-  - Attach click handler to help icon that opens modal with full template information
-- Created template help modal component with help text display
-- Added CSS styling for help icon, modal, and help content sections
-- Implemented keyboard support: ESC key closes help modal, click-outside closes modal
-- All 8 templates now have helpful descriptions, use cases, and quick tips
+**Impact**: Medium - Reduces template selection confusion for new users
+**Summary**:
+- Extended TEMPLATES data structure in `src/constants.js` with description, useCases, and quickTip fields
+- Added help icon and modal component in `src/ui.js` with full template information
+- Implemented keyboard support (ESC to close) and click-outside modal dismiss
+- All 8 templates now include helpful descriptions and beginner guidance
 
-**Next Priority**: Priority 3: Document Duplication
-
----
-
-### Priority 3: Document Duplication ✅ COMPLETED
-**Status**: Completed on 2026-03-22
+### ✅ Priority 3: Document Duplication
+**Completed**: 2026-03-22
 **Category**: Quality of Life
-**Description**: Quick "Clone Document" button in load dialog that creates a copy of a saved document with a new name for rapid iteration.
-**Rationale**: Users often create variations of the same institutional document. Saves repetitive work for power users.
-**Effort**: Low
-**Impact**: High
-**Target Users**: Power Users
-**Implementation Details**:
-- Created `duplicateDocument(docId, customName?)` function in persistence.js with:
-  - Storage quota check before duplication (prevents silent failures)
-  - Auto-increment naming algorithm (handles collisions: "Copy", "Copy 2", "Copy 3", etc.)
-  - Optional custom name support via rename modal during duplication
-  - Returns new document ID and name for confirmation
-- Added "Clone" button in load modal between Load and Delete buttons
-- Created rename modal component in ui.js with:
-  - Suggested default name ("Original Copy")
-  - Text input for custom naming
-  - Keyboard support: Enter to confirm, Escape to cancel
-  - Click-outside-backdrop to cancel
-- Integrated duplicate handler in main.js that:
-  - Opens rename modal when Clone button is clicked
-  - Calls duplicateDocument with custom or default name
-  - Refreshes load modal to show new document
-  - Shows toast confirmation with new document name
-- Added storage quota check function `getStorageQuotaRemaining()` to help prevent quota exceeded errors
-
-**Next Priority**: Priority 4: More Presets & Better Preset UI
+**Impact**: High - Saves repetitive work for power users creating document variations
+**Summary**:
+- Created `duplicateDocument()` function in `src/persistence.js` with storage quota checks
+- Implemented auto-increment naming (handles collisions: "Copy", "Copy 2", etc.)
+- Added rename modal component with custom naming support
+- Integrated clone button in load modal between Load and Delete buttons
+- Related Gaps Addressed: Gap 1 (Storage Quota Management), Gap 4 (Deep Cloning for edge cases)
 
 ---
+
+## 17 Remaining Prioritized Features
+
+Features 4-20 are queued for implementation across Phases 2-3. Priority 4 is the next recommended feature to implement.
+
 
 ## Identified Development Gaps
 
@@ -265,21 +229,24 @@ During implementation of Priority 3 and exploration of the codebase, the followi
 
 ## Gap Resolution Timeline
 
-**Phase 1 (Immediate - Weeks 1-3)**:
+**Phase 1 (Immediate - Weeks 1-3) ✅ COMPLETE**:
 - ✅ Storage Quota Check (completed with Priority 3)
-- Data Integrity checks (recommended pre-Phase 2)
+- ✅ Deep Cloning Utility (completed with Priority 3)
+- Data Integrity checks (recommended for Phase 2 preparation)
 
-**Phase 2 (Weeks 4-8)**:
+**Phase 2 (Weeks 4-8) - NOW STARTING**:
 - Input Validation Layer (before Priority 4+)
-- Advanced Preset System enhancements (Priority 4)
-- Handwritten Notes planning (Priority 8)
-- Multi-Document Bundles planning (Priority 9)
+- Advanced Preset System enhancements (Priority 4) - **Gap 8 resolution required**
+- Handwritten Notes planning (Priority 8) - requires Gap 6 implementation
+- Multi-Document Bundles planning (Priority 9) - requires Gap 7 implementation
+- Data Integrity checks before Priority 5+
 
 **Phase 3 (Weeks 9+)**:
 - IndexedDB Migration (enables Priority 14-15)
-- Image Processing Pipeline (Priority 14)
-- Drawing Tool Canvas Framework (Priority 8)
-- Deep Cloning Utility (foundation for complex features)
+- Image Processing Pipeline (Priority 14) - requires Gap 5 implementation
+- Image Insertion Capability (Priority 14) - requires Gap 5 implementation
+- Drawing Tool Canvas Framework (Priority 8) - requires Gap 6 implementation
+- Storage Quota Management enhancement for larger documents
 
 ---
 
@@ -291,6 +258,7 @@ During implementation of Priority 3 and exploration of the codebase, the followi
 **Impact**: High
 **Target Users**: Power Users
 **Technical Notes**: Add preset categories to constants.js; extend ui.js to show categorized grid with search.
+**Related Gaps**: Gap 8 (Advanced Preset System) - addresses core dependency for this feature
 
 ---
 
@@ -324,6 +292,7 @@ During implementation of Priority 3 and exploration of the codebase, the followi
 **Impact**: Medium
 **Target Users**: Power Users
 **Technical Notes**: Add per-document field visibility bitmask in state.js; extend render.js to conditionally render fields.
+**Related Gaps**: Gap 2 (Input Validation) - field customization requires validation constraints
 
 ---
 
@@ -335,6 +304,7 @@ During implementation of Priority 3 and exploration of the codebase, the followi
 **Impact**: High
 **Target Users**: TTRPG/ARG Creators, Horror Writers
 **Technical Notes**: Add simple canvas drawing overlay using mouse/touch events; save as base64 in state.
+**Related Gaps**: Gap 6 (Handwritten Notes/Drawing Tool) - core capability implementation
 
 ---
 
@@ -346,6 +316,7 @@ During implementation of Priority 3 and exploration of the codebase, the followi
 **Impact**: High
 **Target Users**: ARG/TTRPG Creators, Game Masters
 **Technical Notes**: New top-level entity in state (project); shared field propagation to child documents; new UI panel in ui.js.
+**Related Gaps**: Gap 7 (Multi-Document Workflows) - core project infrastructure
 
 ---
 
@@ -368,6 +339,7 @@ During implementation of Priority 3 and exploration of the codebase, the followi
 **Impact**: Medium
 **Target Users**: Worldbuilders
 **Technical Notes**: Extend FLAVOURS with custom classification arrays in constants.js; add UI editor modal in ui.js.
+**Related Gaps**: Gap 2 (Input Validation) - custom labels require format validation
 
 ---
 
@@ -401,6 +373,7 @@ During implementation of Priority 3 and exploration of the codebase, the followi
 **Impact**: High
 **Target Users**: All
 **Technical Notes**: File input → image compression. Consider localStorage 10MB limit. Base64 embedding or external URL option. May require IndexedDB migration (Phase 3).
+**Related Gaps**: Gap 5 (Image Insertion Capability) - core image handling implementation; Gap 1 (Storage Quota) - requires extended quota management
 
 ---
 
@@ -412,6 +385,7 @@ During implementation of Priority 3 and exploration of the codebase, the followi
 **Impact**: High
 **Target Users**: Dossier Users, TTRPG Creators
 **Technical Notes**: Refactor render.js to support page breaks; extend export.js for PDF.js or multi-image sequence. Storage architecture may need redesign.
+**Related Gaps**: Gap 7 (Multi-Document Workflows) - complements project mode; Gap 1 (Storage Quota) - multi-page increases storage needs
 
 ---
 
@@ -474,26 +448,26 @@ During implementation of Priority 3 and exploration of the codebase, the followi
 
 | Priority | Feature | Category | Effort | Impact | Target Users | Status |
 |----------|---------|----------|--------|--------|--------------|--------|
-| 1 | Undo/Redo Stack | QoL | Low | High | All | ✅ |
-| 2 | Template Tips | Enhancement | Low | Medium | Beginners | ✅ |
-| 3 | Document Clone | QoL | Low | High | Power Users | |
-| 4 | Better Presets | Enhancement | Medium | High | Power Users | |
-| 5 | More Stamps | Enhancement | Low | Medium | All | |
-| 6 | Stamp Colour Picker | Enhancement | Low | Medium | All | |
-| 7 | Field Customization | New Feature | Medium | Medium | Power Users | |
-| 8 | Handwritten Notes | New Feature | Medium | High | TTRPG/ARG | |
-| 9 | Multi-Doc Bundles | New Feature | High | High | ARG/TTRPG | |
-| 10 | Better Doc History | QoL | Medium | Medium | Power Users | |
-| 11 | Custom Classifications | Enhancement | Low | Medium | Worldbuilders | |
-| 12 | JSON Export | New Feature | Low | Medium | All | |
-| 13 | Margin Notes | New Feature | Medium | High | Horror/TTRPG | |
-| 14 | Real Images | Enhancement | Medium | High | All | |
-| 15 | Multi-Page Export | New Feature | High | High | Dossier Users | |
-| 16 | Custom Flavours | New Feature | High | High | Worldbuilders | |
-| 17 | Redaction Reveal | Enhancement | Medium | Medium | GMs/Storytellers | |
-| 18 | Audio Notes | New Feature | Medium | Low | Streamers | |
-| 19 | Template Marketplace | Integration | Medium | Medium | Community | |
-| 20 | Dark Mode/a11y | QoL | Medium | Medium | All | |
+| 1 | Undo/Redo Stack | QoL | Low | High | All | ✅ Complete |
+| 2 | Template Tips | Enhancement | Low | Medium | Beginners | ✅ Complete |
+| 3 | Document Clone | QoL | Low | High | Power Users | ✅ Complete |
+| 4 | Better Presets | Enhancement | Medium | High | Power Users | Next |
+| 5 | More Stamps | Enhancement | Low | Medium | All | Pending |
+| 6 | Stamp Colour Picker | Enhancement | Low | Medium | All | Pending |
+| 7 | Field Customization | New Feature | Medium | Medium | Power Users | Pending |
+| 8 | Handwritten Notes | New Feature | Medium | High | TTRPG/ARG | Pending |
+| 9 | Multi-Doc Bundles | New Feature | High | High | ARG/TTRPG | Pending |
+| 10 | Better Doc History | QoL | Medium | Medium | Power Users | Pending |
+| 11 | Custom Classifications | Enhancement | Low | Medium | Worldbuilders | Pending |
+| 12 | JSON Export | New Feature | Low | Medium | All | Pending |
+| 13 | Margin Notes | New Feature | Medium | High | Horror/TTRPG | Pending |
+| 14 | Real Images | Enhancement | Medium | High | All | Pending |
+| 15 | Multi-Page Export | New Feature | High | High | Dossier Users | Pending |
+| 16 | Custom Flavours | New Feature | High | High | Worldbuilders | Pending |
+| 17 | Redaction Reveal | Enhancement | Medium | Medium | GMs/Storytellers | Pending |
+| 18 | Audio Notes | New Feature | Medium | Low | Streamers | Pending |
+| 19 | Template Marketplace | Integration | Medium | Medium | Community | Pending |
+| 20 | Dark Mode/a11y | QoL | Medium | Medium | All | Pending |
 
 ---
 
