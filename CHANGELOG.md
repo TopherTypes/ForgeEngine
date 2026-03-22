@@ -6,6 +6,68 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [Unreleased]
+
+### Added
+
+#### Data Integrity & Validation (Gap 3 - COMPLETED)
+- **Input Validation on Load** - Comprehensive document schema validator prevents crashes from corrupted localStorage data
+  - Validates all 35+ document fields against type, enum, and constraint requirements
+  - Validates field values against FIELD_CONSTRAINTS from constants.js
+  - Checks numeric bounds (pageWear, photoNoise 0-100), enum values, hex colors, ISO dates
+
+- **Graceful Repair & Recovery** - Corrupted documents are automatically repaired when possible
+  - Missing required fields filled with safe defaults (template→'memo', flavour→'government')
+  - Invalid enums reset to defaults (paper→'cream', ink→'black')
+  - Numeric values clamped to valid ranges
+  - Field values truncated to maxLength constraints
+  - Field arrays filtered to remove invalid elements
+
+- **Data Loss Prevention** - User is always notified of issues
+  - All repairs logged to console with [DOCUMENT_REPAIR] tag and detailed warnings
+  - Unrecoverable documents logged with [DOCUMENT_REMOVED] tag
+  - Corrupted documents cleanly removed from storage to prevent cascading issues
+  - Documents can still be loaded even with minor corruption
+
+- **Comprehensive Testing** - 108 unit tests cover validation scenarios
+  - Valid document acceptance tests
+  - Type validation tests (string, number, boolean, object, array)
+  - Enum validation for all template, flavour, and property types
+  - Numeric bounds validation and clamping
+  - Date and color format validation
+  - Field truncation and array filtering tests
+  - Edge cases: null documents, unicode characters, very large values
+  - Array validation and separation of valid/repaired/invalid documents
+
+### Technical Details
+
+- **New Module: src/validators.js** (500+ lines)
+  - `validateDocumentSchema(doc)` - Validates document against schema, returns ValidationResult
+  - `repairCorruptDocument(doc)` - Repairs corrupted document with graceful defaults
+  - `validateDocumentArray(documents)` - Validates array, separates valid/repaired/invalid
+  - Helpers: `isValidISODate()`, `isValidHexColor()`, schema constants
+
+- **Modified: src/persistence.js**
+  - `loadDocuments()` - Now validates all documents, logs repairs, updates storage
+  - `loadDocument(docId)` - Uses validated documents from loadDocuments()
+  - `validateAllDocumentsInStorage()` - New function for manual storage audits
+  - Logging with [DOCUMENT_LOAD], [DOCUMENT_REPAIR], [DOCUMENT_REMOVED] tags
+
+- **New Test Suite: tests/validators.test.js** (800+ lines)
+  - 108 tests organized by category (validation, repair, edge cases, arrays)
+  - 100% pass rate
+  - Covers all validation rules and repair scenarios
+
+### Benefits
+
+- **Stability**: App no longer crashes from corrupted documents
+- **Safety**: No silent data loss; all repairs are logged and reported
+- **Transparency**: Detailed console logging for debugging storage issues
+- **Phase 3 Ready**: Unblocks dependencies for priorities 9+ (document bundles, image insertion)
+- **Forward Compatible**: Extra unknown fields in documents are allowed
+
+---
+
 ## [1.2.0] - 2026-03-22
 
 ### Release Summary

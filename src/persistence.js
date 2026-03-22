@@ -9,6 +9,12 @@ import {
   formatStorageSize
 } from './utils.js';
 
+import {
+  validateDocumentSchema,
+  repairCorruptDocument,
+  validateDocumentArray
+} from './validators.js';
+
 const DOCS_KEY = 'bdf_docs';
 const PRESETS_KEY = 'bdf_presets';
 const STORAGE_LIMIT = 5 * 1024 * 1024; // 5MB
@@ -98,22 +104,70 @@ export function saveDocument(name, state) {
 
 /**
  * Load all saved documents
+ * Validates and repairs corrupted documents (Gap 3)
+ * @returns {array} Array of valid (or repaired) documents
  */
 export function loadDocuments() {
   try {
-    return JSON.parse(localStorage.getItem(DOCS_KEY) || '[]');
+    const docsJson = localStorage.getItem(DOCS_KEY) || '[]';
+    const allDocs = JSON.parse(docsJson);
+
+    if (!Array.isArray(allDocs)) {
+      console.error('[DOCUMENT_LOAD] Expected array of documents, got ' + typeof allDocs);
+      return [];
+    }
+
+    // Validate all documents
+    const validation = validateDocumentArray(allDocs);
+
+    // Log summary
+    if (validation.invalid.length > 0) {
+      console.error(
+        `[DOCUMENT_LOAD] Found ${validation.invalid.length} unrecoverable corrupted document(s). ` +
+        `Removing from storage.`
+      );
+      validation.invalid.forEach(item => {
+        console.error(`[DOCUMENT_REMOVED] ${item.doc.id || 'unknown'}: ${item.errors.join('; ')}`);
+      });
+
+      // Remove unrecoverable documents from storage
+      const survivingDocs = validation.valid.concat(validation.repaired.map(r => r.repaired));
+      localStorage.setItem(DOCS_KEY, JSON.stringify(survivingDocs));
+    }
+
+    if (validation.repaired.length > 0) {
+      console.warn(
+        `[DOCUMENT_LOAD] Repaired ${validation.repaired.length} corrupted document(s). ` +
+        `Check console for details.`
+      );
+      validation.repaired.forEach(item => {
+        console.warn(
+          `[DOCUMENT_REPAIR] ${item.original.id || 'unknown'}: ${item.warnings.join('; ')}`
+        );
+      });
+
+      // Update storage with repaired documents
+      const allValidDocs = validation.valid.concat(validation.repaired.map(r => r.repaired));
+      localStorage.setItem(DOCS_KEY, JSON.stringify(allValidDocs));
+    }
+
+    // Return all valid documents (original + repaired)
+    return validation.valid.concat(validation.repaired.map(r => r.repaired));
   } catch (e) {
-    console.error('Failed to load documents:', e);
+    console.error('[DOCUMENT_LOAD] Failed to parse documents from storage:', e);
     return [];
   }
 }
 
 /**
  * Load a specific document by ID
+ * Validates and repairs if corrupted (Gap 3)
+ * @param {string} docId - Document ID to load
+ * @returns {object|null} The document or null if not found/unrecoverable
  */
 export function loadDocument(docId) {
   const docs = loadDocuments();
-  return docs.find(d => d.id === docId);
+  return docs.find(d => d.id === docId) || null;
 }
 
 /**
@@ -127,6 +181,57 @@ export function deleteDocument(docId) {
   } catch (e) {
     console.error('Failed to delete document:', e);
     throw e;
+  }
+}
+
+/**
+ * Validate all documents in storage and report issues (Gap 3)
+ * Useful for debugging corrupted storage
+ * @returns {object} Validation report
+ */
+export function validateAllDocumentsInStorage() {
+  try {
+    const docsJson = localStorage.getItem(DOCS_KEY) || '[]';
+    const allDocs = JSON.parse(docsJson);
+
+    if (!Array.isArray(allDocs)) {
+      return {
+        totalDocs: 0,
+        validDocs: 0,
+        repairedDocs: 0,
+        invalidDocs: 0,
+        errors: ['Storage does not contain valid document array']
+      };
+    }
+
+    const validation = validateDocumentArray(allDocs);
+
+    const report = {
+      totalDocs: allDocs.length,
+      validDocs: validation.valid.length,
+      repairedDocs: validation.repaired.length,
+      invalidDocs: validation.invalid.length,
+      errors: validation.invalid.map(item => ({
+        id: item.doc.id || 'unknown',
+        errors: item.errors
+      })),
+      warnings: validation.repaired.map(item => ({
+        id: item.original.id || 'unknown',
+        warnings: item.warnings
+      }))
+    };
+
+    console.log('[STORAGE_AUDIT] Validation report:', report);
+    return report;
+  } catch (e) {
+    console.error('[STORAGE_AUDIT] Failed to validate storage:', e);
+    return {
+      totalDocs: 0,
+      validDocs: 0,
+      repairedDocs: 0,
+      invalidDocs: 0,
+      errors: ['Failed to parse storage: ' + e.message]
+    };
   }
 }
 
