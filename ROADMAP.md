@@ -32,14 +32,24 @@ Features 14-20 involve significant architectural changes (multi-page rendering, 
 
 ## 20 Prioritized Features
 
-### Priority 1: Undo/Redo Stack
+### Priority 1: Undo/Redo Stack ✅ COMPLETED
+**Status**: Completed on 2026-03-22
 **Category**: Quality of Life
 **Description**: Add browser-native undo/redo functionality to recent document edits without requiring save/load cycles.
 **Rationale**: Users frequently experiment with styling and content. Reduces friction and encourages iteration.
 **Effort**: Low
 **Impact**: High
 **Target Users**: All
-**Technical Notes**: Simple JavaScript event history with max ~50 snapshots in memory. Store in state.js.
+**Implementation Details**:
+- Created `src/undoredo.js` with `UndoRedoManager` class managing dual undo/redo stacks (max 50 snapshots)
+- Added keyboard shortcuts: Ctrl+Z (Undo), Ctrl+Y or Ctrl+Shift+Z (Redo)
+- Added Undo/Redo buttons in header that enable/disable based on stack state
+- Integrated snapshot capture at handler level (not individual setters) to avoid excessive snapshots
+- Implemented debouncing for rapid mutations (text inputs: 500ms, sliders: 300ms)
+- Toast notifications show action descriptions (e.g., "↶ Changed template")
+- Stacks clear when loading a saved document (fresh start)
+
+**Next Priority**: Priority 2: Quick Template Library with Descriptions
 
 ---
 
