@@ -89,6 +89,93 @@ export function deleteDocument(docId) {
 }
 
 /**
+ * Check remaining localStorage quota (in MB)
+ */
+export function getStorageQuotaRemaining() {
+  try {
+    const test = '__storage_test__';
+    const testData = new Array(1024 * 1024).join('a'); // ~1MB of data
+    localStorage.setItem(test, testData);
+    localStorage.removeItem(test);
+    return Infinity; // Quota available
+  } catch (e) {
+    // Quota exceeded or error
+    const totalUsed = new Blob(
+      [localStorage.getItem(DOCS_KEY) || '', localStorage.getItem(PRESETS_KEY) || '']
+    ).size;
+    return (5 * 1024 * 1024 - totalUsed) / (1024 * 1024); // Conservative estimate: 5MB limit
+  }
+}
+
+/**
+ * Duplicate a document by creating a copy with a new name
+ * @param {string} docId - ID of document to clone
+ * @param {string} customName - Optional custom name for the duplicate
+ * @returns {object} New duplicated document object, or null if source not found
+ */
+export function duplicateDocument(docId, customName) {
+  try {
+    const sourceDoc = loadDocument(docId);
+    if (!sourceDoc) {
+      console.error('Source document not found:', docId);
+      return null;
+    }
+
+    // Check storage quota
+    const quotaRemaining = getStorageQuotaRemaining();
+    if (quotaRemaining < 0.1) { // Less than 100KB remaining
+      throw new Error('Storage quota almost full. Free up space to continue.');
+    }
+
+    // Generate unique name
+    let newName;
+    if (customName) {
+      newName = customName;
+    } else {
+      const baseName = sourceDoc.name;
+      newName = `${baseName} Copy`;
+      let counter = 2;
+      const docs = loadDocuments();
+
+      while (docs.some(d => d.name === newName)) {
+        newName = `${baseName} Copy ${counter}`;
+        counter++;
+      }
+    }
+
+    // Create new document with duplicated state
+    const duplicatedState = {
+      template: sourceDoc.template,
+      flavour: sourceDoc.flavour,
+      fields: { ...sourceDoc.fields },
+      classification: sourceDoc.classification,
+      paper: sourceDoc.paper,
+      ink: sourceDoc.ink,
+      density: sourceDoc.density,
+      headerAlign: sourceDoc.headerAlign,
+      border: sourceDoc.border,
+      pageWear: sourceDoc.pageWear,
+      photoNoise: sourceDoc.photoNoise,
+      stamps: [...sourceDoc.stamps],
+      stampColor: sourceDoc.stampColor,
+      showSignature: sourceDoc.showSignature,
+      showPhoto: sourceDoc.showPhoto,
+      showRedaction: sourceDoc.showRedaction,
+      footerLeft: sourceDoc.footerLeft,
+      footerRight: sourceDoc.footerRight,
+      notes: sourceDoc.notes,
+      attachments: sourceDoc.attachments
+    };
+
+    const newDocId = saveDocument(newName, duplicatedState);
+    return { id: newDocId, name: newName };
+  } catch (e) {
+    console.error('Failed to duplicate document:', e);
+    throw e;
+  }
+}
+
+/**
  * Save a style preset
  */
 export function savePreset(name, state) {
