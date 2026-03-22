@@ -316,6 +316,114 @@ Validation passes? → Save | Validation fails? → Show error toast
 2. Use field in template's `fields` array
 3. Validation runs automatically on blur and before save
 
+## Data Integrity & Validation on Load (Gap 3)
+
+ForgeEngine validates and repairs corrupted documents when loading from localStorage, preventing app crashes and data loss from malformed storage.
+
+### Validation Architecture
+
+```
+loadDocuments() called
+    ↓
+validateDocumentArray() in validators.js
+    ↓
+For each document:
+  - validateDocumentSchema() checks all fields
+  - If valid: keep as-is
+  - If invalid: repairCorruptDocument() attempts repair
+  - If unrepairable: remove from storage
+    ↓
+Log results to console:
+  - [DOCUMENT_REPAIR] tag for repaired docs
+  - [DOCUMENT_REMOVED] tag for unrecoverable docs
+    ↓
+Update storage with cleaned documents
+    ↓
+Return valid (original + repaired) documents
+```
+
+### Key Components
+
+1. **Document Schema** (`src/validators.js`):
+   - Validates 35+ document fields
+   - Type checks: string, number, boolean, object, array
+   - Enum validation for template, flavour, classification, paper, ink, density, alignment, border
+   - Numeric bounds: pageWear and photoNoise must be 0-100
+   - String constraints: Check field values against FIELD_CONSTRAINTS (maxLength)
+   - Color validation: customStampColor must be valid hex or null
+   - Date validation: created field must be valid ISO timestamp
+
+2. **validateDocumentSchema()** (`src/validators.js`):
+   - Returns `ValidationResult` with `isValid`, `errors[]`, `warnings[]`
+   - Errors = critical issues preventing document use
+   - Warnings = non-critical issues that were repaired
+   - Forward-compatible: extra unknown fields allowed
+
+3. **repairCorruptDocument()** (`src/validators.js`):
+   - Gracefully repairs corrupted documents
+   - Replaces missing required fields with safe defaults:
+     - template → 'memo'
+     - flavour → 'government'
+     - fields → empty object {}
+     - created → current timestamp
+   - Resets invalid enums to defaults:
+     - Invalid template/flavour → defaults
+     - Invalid classification → 'none'
+     - Invalid paper/ink → 'cream'/'black'
+   - Clamps numeric bounds: pageWear/photoNoise to 0-100
+   - Truncates strings to maxLength
+   - Filters arrays to remove invalid elements
+   - Resets invalid boolean fields to false/true defaults
+
+4. **validateDocumentArray()** (`src/validators.js`):
+   - Validates entire array of documents
+   - Separates into: valid[], invalid[], repaired[]
+   - Removes unrecoverable documents
+   - Updates localStorage with cleaned data
+
+5. **Logging System** (`src/persistence.js`):
+   - [DOCUMENT_LOAD] - Summary of validation results
+   - [DOCUMENT_REPAIR] - Details of repaired documents
+   - [DOCUMENT_REMOVED] - Unrecoverable documents
+   - [STORAGE_AUDIT] - Full audit report from validateAllDocumentsInStorage()
+
+### Repair Examples
+
+| Issue | Repair |
+|-------|--------|
+| Missing `template` field | Set to 'memo' |
+| Invalid `template: "invalid"` | Set to 'memo' |
+| `pageWear: 150` (out of bounds) | Clamp to 100 |
+| `fields.body` exceeds maxLength | Truncate to 5000 chars |
+| `stamps: ["Approved", "Invalid"]` | Filter to ["Approved"] |
+| Missing entire `fields` object | Create as {} |
+| Invalid date string | Replace with current ISO timestamp |
+| Completely malformed document | Remove from storage |
+
+### Data Loss Prevention
+
+- **Never silent**: All repairs logged with [DOCUMENT_REPAIR] tag
+- **Audit trail**: Console shows exactly what was repaired
+- **Unrecoverable removal**: Docs that can't be repaired are logged before removal
+- **Manual audit**: Call `validateAllDocumentsInStorage()` for full report
+
+### Testing
+
+- 108 unit tests in `tests/validators.test.js`
+- Categories: valid documents, type validation, enum validation, numeric bounds, dates, colors, repair, edge cases, arrays
+- 100% code coverage of validation rules
+- Tests for unicode, very long values, null documents, malformed objects
+
+### Extending Validation
+
+When adding new document fields:
+
+1. Add field to `FIELD_CONSTRAINTS` in `src/constants.js` with maxLength/minLength
+2. Add enum validation if field has restricted values
+3. Add type check in `validateDocumentSchema()`
+4. Add repair logic in `repairCorruptDocument()`
+5. Add test cases in `tests/validators.test.js`
+
 ## Preset System (Priority 4)
 
 ForgeEngine saves and manages document styling through presets. Users can create presets from current styling and apply them to new documents.
