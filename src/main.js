@@ -459,6 +459,60 @@ function attachModalListeners() {
     });
   }
 
+  // Save Preset button - save current state as a new preset
+  const savePresetBtn = document.getElementById('savePresetBtn');
+  if (savePresetBtn) {
+    savePresetBtn.addEventListener('click', () => {
+      const name = prompt('Enter preset name:', 'My Preset');
+      if (name) {
+        try {
+          savePreset(name, state);
+          showToast('Preset saved: ' + name);
+        } catch (e) {
+          showToast('Failed to save preset');
+          console.error('Save preset error:', e);
+        }
+      }
+    });
+  }
+
+  // Load Preset button - open preset modal (same as presetBtn)
+  const loadPresetBtn = document.getElementById('loadPresetBtn');
+  if (loadPresetBtn) {
+    loadPresetBtn.addEventListener('click', () => {
+      const presets = loadPresets();
+      const sorted = sortPresets(presets, 'alphabetical');
+
+      // Build the modal with the new handlers
+      buildPresetModal(sorted, handleApplyPreset, handleDeletePreset, handleApplyPresetWithOverride);
+
+      // Build tag filter buttons
+      const tagFilters = document.getElementById('tagFilters');
+      if (tagFilters) {
+        tagFilters.innerHTML = '';
+        const tags = getAllPresetTags();
+        tags.forEach(tag => {
+          const btn = document.createElement('button');
+          btn.className = 'tag-filter-button';
+          btn.textContent = tag;
+          btn.addEventListener('click', () => {
+            btn.classList.toggle('active');
+            // Re-filter presets based on selected tags
+            const query = document.getElementById('presetSearch')?.value || '';
+            const activeTags = Array.from(document.querySelectorAll('.tag-filter-button.active')).map(b => b.textContent);
+            const sortBy = document.getElementById('presetSort')?.value || 'alphabetical';
+            const filtered = searchAndFilterPresets(query, { tags: activeTags });
+            const sorted = sortPresets(filtered, sortBy);
+            buildPresetModal(sorted, handleApplyPreset, handleDeletePreset, handleApplyPresetWithOverride);
+          });
+          tagFilters.appendChild(btn);
+        });
+      }
+
+      openPresetModal();
+    });
+  }
+
   // PNG export button
   const pngBtn = document.getElementById('pngBtn');
   if (pngBtn) {
