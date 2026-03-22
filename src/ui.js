@@ -14,7 +14,21 @@ export function buildTemplateGrid(state, onTemplateSelect) {
     const d = document.createElement('div');
     d.className = 'template-card' + (state.template === id ? ' active' : '');
     d.dataset.id = id;
-    d.innerHTML = `<div class="tc-icon">${t.icon}</div>${t.name}`;
+    d.title = t.description;
+
+    const helpBtn = document.createElement('button');
+    helpBtn.className = 'template-help-btn';
+    helpBtn.textContent = '?';
+    helpBtn.title = 'Show help for this template';
+    helpBtn.type = 'button';
+    helpBtn.onclick = (e) => {
+      e.stopPropagation();
+      openTemplateHelpModal(id);
+    };
+
+    d.innerHTML = `<div class="tc-icon">${t.icon}</div><span class="tc-name">${t.name}</span>`;
+    d.appendChild(helpBtn);
+
     d.onclick = () => onTemplateSelect(id);
     g.appendChild(d);
   }
@@ -204,4 +218,45 @@ export function openPresetModal() {
  */
 export function closePresetModal() {
   document.getElementById('presetModal').classList.add('hidden');
+}
+
+/**
+ * Show template help modal
+ */
+export function openTemplateHelpModal(templateId) {
+  const t = TEMPLATES[templateId];
+  if (!t) return;
+
+  const title = document.getElementById('templateHelpTitle');
+  const content = document.getElementById('templateHelpContent');
+
+  title.textContent = `${t.name} - Help`;
+
+  const useCasesHtml = t.useCases.map(uc => `<li>${esc(uc)}</li>`).join('');
+
+  content.innerHTML = `
+    <div class="help-section">
+      <div class="help-description">
+        <strong>Description:</strong> ${esc(t.description)}
+      </div>
+      <div class="help-use-cases">
+        <strong>Use Cases:</strong>
+        <ul>
+          ${useCasesHtml}
+        </ul>
+      </div>
+      <div class="help-tip">
+        <strong>Quick Tip:</strong> ${esc(t.quickTip)}
+      </div>
+    </div>
+  `;
+
+  document.getElementById('templateHelpModal').classList.remove('hidden');
+}
+
+/**
+ * Close template help modal
+ */
+export function closeTemplateHelpModal() {
+  document.getElementById('templateHelpModal').classList.add('hidden');
 }
