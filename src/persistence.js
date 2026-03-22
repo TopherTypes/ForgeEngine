@@ -176,14 +176,15 @@ export function duplicateDocument(docId, customName) {
 }
 
 /**
- * Save a style preset
+ * Save a style preset with metadata support (Gap 8)
  */
-export function savePreset(name, state) {
+export function savePreset(name, state, metadata = {}) {
   try {
     const presets = JSON.parse(localStorage.getItem(PRESETS_KEY) || '[]');
     const preset = {
       id: Date.now().toString(),
       name: name || 'Untitled Preset',
+      description: metadata.description || '',
       template: state.template,
       flavour: state.flavour,
       classification: state.classification,
@@ -199,7 +200,16 @@ export function savePreset(name, state) {
       showSignature: state.showSignature,
       showPhoto: state.showPhoto,
       showRedaction: state.showRedaction,
-      created: new Date().toISOString()
+      created: new Date().toISOString(),
+      // Gap 8: Advanced Preset System metadata
+      metadata: {
+        flavour: metadata.flavour || state.flavour,
+        tags: metadata.tags || [],
+        category: metadata.category || 'custom',
+        createdDate: Date.now(),
+        lastUsed: null,
+        useFrequency: 0
+      }
     };
     presets.push(preset);
     localStorage.setItem(PRESETS_KEY, JSON.stringify(presets));
@@ -223,11 +233,37 @@ export function loadPresets() {
 }
 
 /**
- * Load a specific preset by ID
+ * Load a specific preset by ID and update usage metrics (Gap 8)
  */
 export function loadPreset(presetId) {
   const presets = loadPresets();
-  return presets.find(p => p.id === presetId);
+  const preset = presets.find(p => p.id === presetId);
+
+  if (preset) {
+    // Update usage metrics
+    if (!preset.metadata) {
+      preset.metadata = {
+        flavour: preset.flavour,
+        tags: [],
+        category: 'custom',
+        createdDate: new Date(preset.created).getTime(),
+        lastUsed: null,
+        useFrequency: 0
+      };
+    }
+    preset.metadata.lastUsed = Date.now();
+    preset.metadata.useFrequency = (preset.metadata.useFrequency || 0) + 1;
+
+    // Save updated presets
+    try {
+      localStorage.setItem(PRESETS_KEY, JSON.stringify(presets));
+    } catch (e) {
+      console.error('Failed to update preset usage:', e);
+      // Continue anyway - don't break loading if update fails
+    }
+  }
+
+  return preset;
 }
 
 /**
@@ -242,4 +278,153 @@ export function deletePreset(presetId) {
     console.error('Failed to delete preset:', e);
     throw e;
   }
+}
+
+// ════════════════════════════════════════════════════════════════════════════════
+//  PRESET SEARCH, FILTER, & SORT HELPERS (Gap 8)
+// ════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Search presets by query string (searches name, description, tags)
+ * @param {string} query - Search query (case-insensitive)
+ * @returns {array} Matching presets
+ */
+export function searchPresets(query) {
+  if (!query || query.trim() === '') {
+    return loadPresets();
+  }
+
+  const normalizedQuery = query.toLowerCase().trim();
+  const presets = loadPresets();
+
+  return presets.filter(p => {
+    const name = (p.name || '').toLowerCase();
+    const description = (p.description || '').toLowerCase();
+    const tags = (p.metadata?.tags || []).map(t => t.toLowerCase()).join(' ');
+
+    return (
+      name.includes(normalizedQuery) ||
+      description.includes(normalizedQuery) ||
+      tags.includes(normalizedQuery)
+    );
+  });
+}
+
+/**
+ * Filter presets by tags and/or category
+ * @param {object} filters - { tags: [string], category: string }
+ * @returns {array} Filtered presets
+ */
+export function filterPresets(filters = {}) {
+  const presets = loadPresets();
+  const { tags = [], category = null } = filters;
+
+  return presets.filter(p => {
+    const metadata = p.metadata || {};
+
+    // Filter by category if specified
+    if (category && metadata.category !== category) {
+      return false;
+    }
+
+    // Filter by tags (all specified tags must be present)
+    if (tags.length > 0) {
+      const presetTags = metadata.tags || [];
+      return tags.every(tag => presetTags.includes(tag));
+    }
+
+    return true;
+  });
+}
+
+/**
+ * Search and filter presets combined
+ * @param {string} query - Search query
+ * @param {object} filters - Filter options
+ * @returns {array} Results matching query and filters
+ */
+export function searchAndFilterPresets(query, filters = {}) {
+  let results = searchPresets(query);
+
+  if (filters.tags?.length > 0 || filters.category) {
+    const filtered = filterPresets(filters);
+    // Intersect search results with filter results
+    const filteredIds = new Set(filtered.map(p => p.id));
+    results = results.filter(p => filteredIds.has(p.id));
+  }
+
+  return results;
+}
+
+/**
+ * Sort presets by specified criteria
+ * @param {array} presets - Presets to sort
+ * @param {string} sortBy - Sort criterion: 'recent', 'alphabetical', 'frequency', 'custom'
+ * @returns {array} Sorted presets
+ */
+export function sortPresets(presets, sortBy = 'alphabetical') {
+  const sorted = [...presets]; // Create copy to avoid mutation
+
+  switch (sortBy) {
+    case 'recent':
+      // Most recently used first (never used presets at end)
+      return sorted.sort((a, b) => {
+        const aTime = a.metadata?.lastUsed || 0;
+        const bTime = b.metadata?.lastUsed || 0;
+        return bTime - aTime; // Descending
+      });
+
+    case 'frequency':
+      // Most frequently used first
+      return sorted.sort((a, b) => {
+        const aFreq = a.metadata?.useFrequency || 0;
+        const bFreq = b.metadata?.useFrequency || 0;
+        return bFreq - aFreq; // Descending
+      });
+
+    case 'custom':
+      // User-defined order (via stored customOrder array)
+      // For now, keep original order - will be enhanced with customOrder metadata
+      return sorted;
+
+    case 'alphabetical':
+    default:
+      // A-Z by preset name
+      return sorted.sort((a, b) => {
+        return (a.name || '').localeCompare(b.name || '');
+      });
+  }
+}
+
+/**
+ * Get all unique tags from presets
+ * @returns {array} Array of unique tag strings
+ */
+export function getAllPresetTags() {
+  const presets = loadPresets();
+  const tags = new Set();
+
+  presets.forEach(p => {
+    const presetTags = p.metadata?.tags || [];
+    presetTags.forEach(tag => tags.add(tag));
+  });
+
+  return Array.from(tags).sort();
+}
+
+/**
+ * Get all unique flavours from presets
+ * @returns {array} Array of unique flavour strings
+ */
+export function getAllPresetFlavours() {
+  const presets = loadPresets();
+  const flavours = new Set();
+
+  presets.forEach(p => {
+    if (p.metadata?.flavour) {
+      flavours.add(p.metadata.flavour);
+    }
+  });
+
+  return Array.from(flavours).sort();
 }

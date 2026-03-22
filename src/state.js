@@ -27,7 +27,10 @@ export let state = {
   footerLeft: '',
   footerRight: '',
   notes: '',
-  attachments: ''
+  attachments: '',
+  // Gap 8: Preset tracking metadata
+  lastAppliedPreset: null,
+  presetOverrides: {} // Track which fields were overridden when applying preset
 };
 
 /**
@@ -61,7 +64,10 @@ export function resetState() {
     footerLeft: '',
     footerRight: '',
     notes: '',
-    attachments: ''
+    attachments: '',
+    // Gap 8: Preset tracking metadata
+    lastAppliedPreset: null,
+    presetOverrides: {}
   };
 }
 
