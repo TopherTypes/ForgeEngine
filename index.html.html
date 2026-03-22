@@ -1,0 +1,1831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bureaucratic Document Faker</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=EB+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@300;400;500;700&family=Special+Elite&family=Cutive+Mono&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+:root {
+  --ui-bg: #1a1a1e;
+  --ui-surface: #232328;
+  --ui-surface-2: #2a2a30;
+  --ui-border: #3a3a42;
+  --ui-border-light: #44444e;
+  --ui-text: #d4d4d8;
+  --ui-text-dim: #8888a0;
+  --ui-text-bright: #eeeef2;
+  --ui-accent: #7c8a6e;
+  --ui-accent-hover: #8f9e7f;
+  --ui-danger: #a04040;
+  --ui-warning: #b08840;
+  --panel-width: 340px;
+  --preview-min: 500px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--ui-bg);
+  color: var(--ui-text);
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── APP LAYOUT ── */
+.app {
+  display: grid;
+  grid-template-columns: var(--panel-width) 1fr var(--panel-width);
+  grid-template-rows: 48px 1fr;
+  height: 100vh;
+}
+
+/* ── HEADER ── */
+.header {
+  grid-column: 1 / -1;
+  background: var(--ui-surface);
+  border-bottom: 1px solid var(--ui-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  z-index: 100;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--ui-text-dim);
+}
+
+.header-brand .icon {
+  width: 24px; height: 24px;
+  background: var(--ui-accent);
+  border-radius: 3px;
+  display: flex; align-items: center; justify-content: center;
+  color: #111;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.header-actions { display: flex; gap: 6px; }
+
+/* ── BUTTONS ── */
+.btn {
+  padding: 6px 14px;
+  border: 1px solid var(--ui-border);
+  background: var(--ui-surface-2);
+  color: var(--ui-text);
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn:hover { background: var(--ui-border); color: var(--ui-text-bright); }
+.btn-primary { background: var(--ui-accent); color: #111; border-color: var(--ui-accent); font-weight: 600; }
+.btn-primary:hover { background: var(--ui-accent-hover); }
+.btn-danger { border-color: var(--ui-danger); color: var(--ui-danger); }
+.btn-danger:hover { background: var(--ui-danger); color: #fff; }
+.btn-sm { padding: 4px 10px; font-size: 11px; }
+
+/* ── PANELS ── */
+.panel {
+  background: var(--ui-surface);
+  border-right: 1px solid var(--ui-border);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ui-border) transparent;
+}
+.panel:last-of-type { border-right: none; border-left: 1px solid var(--ui-border); }
+
+.panel-section {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--ui-border);
+}
+.panel-section:last-child { border-bottom: none; }
+
+.panel-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--ui-text-dim);
+  margin-bottom: 10px;
+}
+
+/* ── FORM CONTROLS ── */
+.field { margin-bottom: 10px; }
+.field:last-child { margin-bottom: 0; }
+
+.field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ui-text-dim);
+  margin-bottom: 4px;
+}
+
+.field input, .field textarea, .field select {
+  width: 100%;
+  padding: 7px 10px;
+  background: var(--ui-bg);
+  border: 1px solid var(--ui-border);
+  border-radius: 3px;
+  color: var(--ui-text-bright);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  transition: border-color 0.15s;
+}
+.field input:focus, .field textarea:focus, .field select:focus {
+  outline: none;
+  border-color: var(--ui-accent);
+}
+.field textarea { resize: vertical; min-height: 60px; line-height: 1.5; }
+.field select { cursor: pointer; }
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+/* ── TOGGLE ── */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+}
+.toggle-row span { font-size: 12px; }
+.toggle {
+  width: 36px; height: 20px;
+  background: var(--ui-border);
+  border-radius: 10px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.toggle.active { background: var(--ui-accent); }
+.toggle::after {
+  content: '';
+  position: absolute;
+  width: 16px; height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  top: 2px; left: 2px;
+  transition: transform 0.2s;
+}
+.toggle.active::after { transform: translateX(16px); }
+
+/* ── SLIDER ── */
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.slider-row input[type="range"] {
+  flex: 1;
+  -webkit-appearance: none;
+  height: 4px;
+  background: var(--ui-border);
+  border-radius: 2px;
+  border: none;
+  padding: 0;
+}
+.slider-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  background: var(--ui-accent);
+  border-radius: 50%;
+  cursor: pointer;
+}
+.slider-row .slider-val {
+  font-size: 11px;
+  color: var(--ui-text-dim);
+  min-width: 28px;
+  text-align: right;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+/* ── TEMPLATE GRID ── */
+.template-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.template-card {
+  padding: 10px 8px;
+  background: var(--ui-bg);
+  border: 1px solid var(--ui-border);
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+  font-size: 11px;
+  line-height: 1.3;
+}
+.template-card:hover { border-color: var(--ui-accent); color: var(--ui-text-bright); }
+.template-card.active { border-color: var(--ui-accent); background: rgba(124,138,110,0.12); color: var(--ui-text-bright); }
+.template-card .tc-icon { font-size: 20px; margin-bottom: 4px; }
+
+/* ── STAMP CHIPS ── */
+.stamp-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.stamp-chip {
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  border: 1px solid var(--ui-border);
+  border-radius: 3px;
+  cursor: pointer;
+  background: var(--ui-bg);
+  color: var(--ui-text-dim);
+  transition: all 0.15s;
+}
+.stamp-chip:hover { border-color: var(--ui-accent); color: var(--ui-text-bright); }
+.stamp-chip.active { background: rgba(124,138,110,0.15); border-color: var(--ui-accent); color: var(--ui-text-bright); }
+
+/* ── COLOUR SWATCHES ── */
+.swatch-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.swatch {
+  width: 28px; height: 28px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.15s, transform 0.1s;
+}
+.swatch:hover { transform: scale(1.1); }
+.swatch.active { border-color: var(--ui-text-bright); }
+
+/* ── PREVIEW AREA ── */
+.preview-area {
+  background: #2e2e34;
+  overflow: auto;
+  display: flex;
+  justify-content: center;
+  padding: 30px;
+  position: relative;
+}
+
+.preview-wrapper {
+  width: 210mm;
+  min-height: 297mm;
+  position: relative;
+  flex-shrink: 0;
+  box-shadow: 0 4px 30px rgba(0,0,0,0.5);
+  transform-origin: top center;
+}
+
+/* ── DOCUMENT STYLES ── */
+.doc-page {
+  width: 100%;
+  min-height: 297mm;
+  position: relative;
+  padding: 20mm 22mm 18mm 22mm;
+  overflow: hidden;
+  font-family: 'Courier Prime', monospace;
+  line-height: 1.5;
+  color: #222;
+}
+
+/* Paper tones */
+.paper-white { background: #f8f6f1; }
+.paper-cream { background: #f0e8d5; }
+.paper-aged { background: #e8dcc4; }
+.paper-yellow { background: #f5eec8; }
+.paper-grey { background: #e0ddd8; }
+.paper-blue { background: #dce4ec; }
+
+/* Ink tones */
+.ink-black .doc-content { color: #1a1a1a; }
+.ink-dark .doc-content { color: #2c2c2c; }
+.ink-faded .doc-content { color: #4a4a4a; }
+.ink-blue .doc-content { color: #1a2a4a; }
+.ink-sepia .doc-content { color: #4a3520; }
+
+/* Page wear overlay */
+.page-wear {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  mix-blend-mode: multiply;
+  opacity: 0;
+}
+
+.page-wear.active {
+  background:
+    radial-gradient(ellipse at 15% 10%, rgba(120,100,70,0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 90%, rgba(100,80,60,0.2) 0%, transparent 40%),
+    radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(80,70,50,0.08) 100%);
+}
+
+/* Photocopy noise */
+.photocopy-noise {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 6;
+  opacity: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.4'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+}
+
+/* Document content layer */
+.doc-content {
+  position: relative;
+  z-index: 2;
+}
+
+/* Classification banners */
+.doc-classification {
+  text-align: center;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  font-size: 11px;
+  padding: 4px 0;
+  margin-bottom: 12px;
+  border-top: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+}
+
+.cls-confidential { color: #8b0000; }
+.cls-secret { color: #8b0000; }
+.cls-internal { color: #444; }
+.cls-unclassified { color: #555; }
+
+/* Document header */
+.doc-header {
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(0,0,0,0.25);
+}
+.doc-header.align-center { text-align: center; }
+.doc-header.align-left { text-align: left; }
+
+.doc-org-name {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  margin-bottom: 2px;
+}
+.doc-dept {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  opacity: 0.7;
+  margin-bottom: 6px;
+}
+.doc-title {
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-top: 8px;
+}
+
+/* Metadata grid */
+.doc-meta {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 16px;
+  font-size: 11px;
+  margin-bottom: 16px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.15);
+}
+.doc-meta .meta-label {
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 1px;
+  opacity: 0.7;
+  white-space: nowrap;
+}
+.doc-meta .meta-value {
+  font-size: 12px;
+}
+
+/* Memo header style */
+.memo-header {
+  font-size: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid rgba(0,0,0,0.3);
+}
+.memo-header .memo-row {
+  display: grid;
+  grid-template-columns: 70px 1fr;
+  padding: 3px 0;
+}
+.memo-header .memo-label {
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+
+/* Body text */
+.doc-body {
+  font-size: 12px;
+  line-height: 1.7;
+  margin-bottom: 20px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* Footer */
+.doc-footer {
+  position: absolute;
+  bottom: 14mm;
+  left: 22mm;
+  right: 22mm;
+  font-size: 8px;
+  opacity: 0.5;
+  display: flex;
+  justify-content: space-between;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-top: 1px solid rgba(0,0,0,0.15);
+  padding-top: 6px;
+  z-index: 2;
+}
+
+/* Signature block */
+.doc-signature {
+  margin-top: 30px;
+  padding-top: 10px;
+}
+.sig-line {
+  width: 200px;
+  border-top: 1px solid rgba(0,0,0,0.4);
+  padding-top: 4px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.6;
+}
+
+/* Photo placeholder */
+.doc-photo {
+  width: 120px;
+  height: 150px;
+  border: 2px solid rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.4;
+  margin: 10px 0;
+  background: rgba(0,0,0,0.03);
+}
+
+/* Attachment box */
+.doc-attachments {
+  margin-top: 14px;
+  padding: 8px 10px;
+  border: 1px solid rgba(0,0,0,0.2);
+  font-size: 10px;
+}
+.doc-attachments .att-title {
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 9px;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+  opacity: 0.6;
+}
+
+/* ── STAMPS ── */
+.stamp-overlay {
+  position: absolute;
+  z-index: 10;
+  pointer-events: none;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  padding: 8px 20px;
+  border: 4px solid;
+  border-radius: 4px;
+  font-family: 'Special Elite', cursive;
+}
+
+.stamp-approved { color: rgba(0,100,0,0.55); border-color: rgba(0,100,0,0.55); top: 30%; right: 8%; transform: rotate(-12deg); font-size: 28px; }
+.stamp-denied { color: rgba(180,0,0,0.55); border-color: rgba(180,0,0,0.55); top: 25%; right: 10%; transform: rotate(8deg); font-size: 28px; }
+.stamp-confidential { color: rgba(180,0,0,0.45); border-color: rgba(180,0,0,0.45); top: 5%; left: 50%; transform: translateX(-50%) rotate(-2deg); font-size: 18px; letter-spacing: 6px; }
+.stamp-internal { color: rgba(0,0,0,0.3); border-color: rgba(0,0,0,0.3); bottom: 20%; right: 5%; transform: rotate(-5deg); font-size: 14px; }
+.stamp-archived { color: rgba(80,80,120,0.4); border-color: rgba(80,80,120,0.4); top: 40%; left: 10%; transform: rotate(15deg); font-size: 22px; }
+.stamp-redacted { color: rgba(180,0,0,0.5); border-color: rgba(180,0,0,0.5); top: 35%; left: 50%; transform: translateX(-50%) rotate(-3deg); font-size: 24px; letter-spacing: 8px; }
+.stamp-evidence { color: rgba(0,0,150,0.45); border-color: rgba(0,0,150,0.45); bottom: 25%; left: 8%; transform: rotate(-8deg); font-size: 18px; }
+.stamp-copy { color: rgba(0,0,0,0.2); border-color: rgba(0,0,0,0.2); top: 50%; left: 50%; transform: translate(-50%,-50%) rotate(-35deg); font-size: 48px; letter-spacing: 12px; }
+.stamp-draft { color: rgba(150,100,0,0.4); border-color: rgba(150,100,0,0.4); top: 20%; left: 15%; transform: rotate(12deg); font-size: 30px; }
+
+/* Stamp colour overrides */
+.stamp-color-red { color: rgba(180,0,0,0.5) !important; border-color: rgba(180,0,0,0.5) !important; }
+.stamp-color-blue { color: rgba(0,0,150,0.5) !important; border-color: rgba(0,0,150,0.5) !important; }
+.stamp-color-black { color: rgba(0,0,0,0.4) !important; border-color: rgba(0,0,0,0.4) !important; }
+.stamp-color-faded { color: rgba(100,80,60,0.3) !important; border-color: rgba(100,80,60,0.3) !important; }
+
+/* ── REDACTION ── */
+.redacted-block {
+  background: #111;
+  color: transparent;
+  padding: 0 4px;
+  display: inline;
+  user-select: none;
+  position: relative;
+}
+
+/* ── FLAVOUR-SPECIFIC TYPOGRAPHY ── */
+.flavour-government .doc-content { font-family: 'Courier Prime', monospace; }
+.flavour-academic .doc-content { font-family: 'EB Garamond', serif; }
+.flavour-academic .doc-body { font-size: 13px; line-height: 1.8; }
+.flavour-research .doc-content { font-family: 'IBM Plex Mono', monospace; }
+.flavour-police .doc-content { font-family: 'Courier Prime', monospace; }
+.flavour-medical .doc-content { font-family: 'Source Serif 4', serif; }
+.flavour-corporate .doc-content { font-family: 'Libre Baskerville', serif; }
+.flavour-occult .doc-content { font-family: 'EB Garamond', serif; font-style: italic; }
+.flavour-retro .doc-content { font-family: 'Cutive Mono', monospace; letter-spacing: 0.5px; }
+.flavour-retro .doc-page { background: #1a1a18 !important; color: #33ff33 !important; }
+.flavour-retro .doc-content { color: #33ff33 !important; }
+.flavour-retro .doc-classification { color: #33ff33; border-color: #33ff33; }
+.flavour-retro .doc-header { border-color: rgba(51,255,51,0.3); }
+.flavour-retro .doc-meta { border-color: rgba(51,255,51,0.2); }
+.flavour-retro .doc-footer { border-color: rgba(51,255,51,0.2); color: #33ff33; }
+
+/* Bulletin / poster layout */
+.layout-bulletin .doc-page { padding: 15mm 18mm; }
+.layout-bulletin .doc-title { font-size: 24px; text-align: center; margin-bottom: 10px; }
+.layout-bulletin .doc-body { text-align: center; }
+
+/* Dense layout */
+.density-compact .doc-body { font-size: 11px; line-height: 1.4; }
+.density-compact .doc-meta { font-size: 10px; }
+.density-normal .doc-body { font-size: 12px; line-height: 1.7; }
+.density-spacious .doc-body { font-size: 13px; line-height: 1.9; }
+.density-spacious .doc-page { padding: 25mm; }
+
+/* Border styles */
+.border-none .doc-page {}
+.border-thin .doc-page { border: 1px solid rgba(0,0,0,0.2); }
+.border-double .doc-page { border: 3px double rgba(0,0,0,0.25); }
+.border-heavy .doc-page { border: 2px solid rgba(0,0,0,0.35); }
+
+/* ── RESPONSIVE SCALING ── */
+@media (max-width: 1200px) {
+  .app { grid-template-columns: 280px 1fr 280px; }
+}
+
+/* ── EXPORT HELPERS ── */
+@media print {
+  .app { display: block !important; }
+  .panel, .header { display: none !important; }
+  .preview-area { padding: 0 !important; background: none !important; overflow: visible !important; }
+  .preview-wrapper { box-shadow: none !important; margin: 0 !important; }
+}
+
+/* ── PRESET/SAVE MODAL ── */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-backdrop.hidden { display: none; }
+
+.modal {
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border);
+  border-radius: 8px;
+  padding: 24px;
+  min-width: 380px;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.modal h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--ui-text-bright);
+}
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.save-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: var(--ui-bg);
+  border: 1px solid var(--ui-border);
+  border-radius: 4px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.save-item:hover { border-color: var(--ui-accent); }
+.save-item .si-name { font-size: 12px; font-weight: 500; }
+.save-item .si-meta { font-size: 10px; color: var(--ui-text-dim); }
+.save-item .si-actions { display: flex; gap: 4px; }
+
+/* ── NOTIFICATION ── */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(60px);
+  background: var(--ui-accent);
+  color: #111;
+  padding: 8px 20px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  z-index: 300;
+  opacity: 0;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-brand">
+      <div class="icon">B</div>
+      <span>Bureaucratic Document Faker</span>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-sm" onclick="resetDoc()">New</button>
+      <button class="btn btn-sm" onclick="openSaveModal()">Save</button>
+      <button class="btn btn-sm" onclick="openLoadModal()">Load</button>
+      <button class="btn btn-sm" onclick="exportPNG()">PNG</button>
+      <button class="btn btn-sm btn-primary" onclick="exportPrint()">Print / PDF</button>
+    </div>
+  </header>
+
+  <!-- LEFT PANEL: CONTENT -->
+  <div class="panel" id="leftPanel">
+    <!-- Template selection -->
+    <div class="panel-section">
+      <div class="panel-title">Template</div>
+      <div class="template-grid" id="templateGrid"></div>
+    </div>
+
+    <!-- Flavour Pack -->
+    <div class="panel-section">
+      <div class="panel-title">Institutional Flavour</div>
+      <div class="field">
+        <select id="flavourSelect" onchange="updatePreview()">
+          <option value="government">Government / Civil Service</option>
+          <option value="academic">Academic / University</option>
+          <option value="research">Research Lab</option>
+          <option value="police">Police / Investigative</option>
+          <option value="medical">Medical / Administrative</option>
+          <option value="corporate">Corporate Internal</option>
+          <option value="occult">Occult Archive</option>
+          <option value="retro">Retro Terminal Bureau</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Content fields -->
+    <div class="panel-section">
+      <div class="panel-title">Content</div>
+      <div id="contentFields"></div>
+    </div>
+
+    <!-- Notes / Attachments -->
+    <div class="panel-section">
+      <div class="panel-title">Extras</div>
+      <div class="field">
+        <label>Notes</label>
+        <textarea id="docNotes" rows="2" oninput="updatePreview()" placeholder="Optional notes..."></textarea>
+      </div>
+      <div class="field">
+        <label>Attachments List</label>
+        <input type="text" id="docAttachments" oninput="updatePreview()" placeholder="e.g. Exhibit A, Photo Set 12">
+      </div>
+      <div class="field">
+        <label>Footer Left</label>
+        <input type="text" id="footerLeft" oninput="updatePreview()" placeholder="e.g. FORM 117-B REV. 2">
+      </div>
+      <div class="field">
+        <label>Footer Right</label>
+        <input type="text" id="footerRight" oninput="updatePreview()" placeholder="e.g. Page 1 of 1">
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTRE: PREVIEW -->
+  <div class="preview-area" id="previewArea">
+    <div class="preview-wrapper" id="previewWrapper">
+      <div id="docPreview"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL: STYLE -->
+  <div class="panel" id="rightPanel">
+    <!-- Classification -->
+    <div class="panel-section">
+      <div class="panel-title">Classification</div>
+      <div class="field">
+        <select id="classificationSelect" onchange="updatePreview()">
+          <option value="none">None</option>
+          <option value="unclassified">Unclassified</option>
+          <option value="internal">Internal Use Only</option>
+          <option value="confidential">Confidential</option>
+          <option value="secret">Secret</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Paper & Ink -->
+    <div class="panel-section">
+      <div class="panel-title">Paper Tone</div>
+      <div class="swatch-row" id="paperSwatches"></div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-title">Ink Tone</div>
+      <div class="swatch-row" id="inkSwatches"></div>
+    </div>
+
+    <!-- Layout -->
+    <div class="panel-section">
+      <div class="panel-title">Layout</div>
+      <div class="field">
+        <label>Density</label>
+        <select id="densitySelect" onchange="updatePreview()">
+          <option value="compact">Compact</option>
+          <option value="normal" selected>Normal</option>
+          <option value="spacious">Spacious</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Header Alignment</label>
+        <select id="headerAlign" onchange="updatePreview()">
+          <option value="center" selected>Centre</option>
+          <option value="left">Left</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Border</label>
+        <select id="borderStyle" onchange="updatePreview()">
+          <option value="none">None</option>
+          <option value="thin">Thin</option>
+          <option value="double">Double</option>
+          <option value="heavy">Heavy</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Effects -->
+    <div class="panel-section">
+      <div class="panel-title">Effects</div>
+      <div class="field">
+        <label>Page Wear</label>
+        <div class="slider-row">
+          <input type="range" id="pageWear" min="0" max="100" value="0" oninput="updatePreview()">
+          <span class="slider-val" id="pageWearVal">0</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Photocopy Noise</label>
+        <div class="slider-row">
+          <input type="range" id="photoNoise" min="0" max="100" value="0" oninput="updatePreview()">
+          <span class="slider-val" id="photoNoiseVal">0</span>
+        </div>
+      </div>
+      <div class="toggle-row">
+        <span>Signature Block</span>
+        <div class="toggle" id="sigToggle" onclick="toggleSwitch(this); updatePreview()"></div>
+      </div>
+      <div class="toggle-row">
+        <span>Photo Placeholder</span>
+        <div class="toggle" id="photoToggle" onclick="toggleSwitch(this); updatePreview()"></div>
+      </div>
+    </div>
+
+    <!-- Stamps -->
+    <div class="panel-section">
+      <div class="panel-title">Stamps</div>
+      <div class="stamp-grid" id="stampGrid"></div>
+      <div style="margin-top:10px">
+        <label style="font-size:11px;color:var(--ui-text-dim);display:block;margin-bottom:4px">Stamp Colour</label>
+        <div class="swatch-row" id="stampColorSwatches"></div>
+      </div>
+    </div>
+
+    <!-- Redaction -->
+    <div class="panel-section">
+      <div class="panel-title">Redaction</div>
+      <p style="font-size:11px;color:var(--ui-text-dim);margin-bottom:8px">
+        Wrap text in [REDACTED] or [R]...[/R] in the body field to apply redaction bars.
+      </p>
+      <div class="toggle-row">
+        <span>Show redaction markers</span>
+        <div class="toggle active" id="redactionToggle" onclick="toggleSwitch(this); updatePreview()"></div>
+      </div>
+    </div>
+
+    <!-- Presets -->
+    <div class="panel-section">
+      <div class="panel-title">Presets</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-sm" onclick="savePreset()">Save Preset</button>
+        <button class="btn btn-sm" onclick="openPresetModal()">Load Preset</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-backdrop hidden" id="saveModal">
+  <div class="modal">
+    <h3>Save Document</h3>
+    <div class="field">
+      <label>Document Name</label>
+      <input type="text" id="saveDocName" placeholder="My classified report...">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeSaveModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDoc()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop hidden" id="loadModal">
+  <div class="modal">
+    <h3>Saved Documents</h3>
+    <div id="loadList"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeLoadModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop hidden" id="presetModal">
+  <div class="modal">
+    <h3>Saved Presets</h3>
+    <div id="presetList"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closePresetModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════════
+//  DATA: TEMPLATES
+// ════════════════════════════════════════════════════
+const TEMPLATES = {
+  memo: {
+    name: 'Internal Memo', icon: '📋',
+    fields: ['organisation','department','docRef','date','to','from','subject','body'],
+    layout: 'memo'
+  },
+  incident: {
+    name: 'Incident Report', icon: '⚠️',
+    fields: ['organisation','department','incidentNumber','date','time','reportingOfficer','location','summary','body','actionTaken'],
+    layout: 'report'
+  },
+  bulletin: {
+    name: 'Missing Person', icon: '🔍',
+    fields: ['organisation','title','caseNumber','date','description','body','contact'],
+    layout: 'bulletin'
+  },
+  notice: {
+    name: 'Official Notice', icon: '📜',
+    fields: ['organisation','department','docRef','date','title','body','authority'],
+    layout: 'notice'
+  },
+  research: {
+    name: 'Research Log', icon: '🧪',
+    fields: ['organisation','facility','experimentId','date','leadResearcher','clearance','observations','body','warnings'],
+    layout: 'report'
+  },
+  casefile: {
+    name: 'Case File Cover', icon: '📁',
+    fields: ['organisation','department','caseNumber','date','subject','status','summary','assignedTo'],
+    layout: 'cover'
+  },
+  intake: {
+    name: 'Intake Form', icon: '📝',
+    fields: ['organisation','department','formNumber','date','subjectName','dob','admittedBy','reason','body'],
+    layout: 'form'
+  },
+  briefing: {
+    name: 'Redacted Briefing', icon: '█▌',
+    fields: ['organisation','department','reportCode','date','preparedBy','clearance','body'],
+    layout: 'briefing'
+  }
+};
+
+const FIELD_LABELS = {
+  organisation: 'Organisation',
+  department: 'Department',
+  facility: 'Facility',
+  docRef: 'Reference Number',
+  date: 'Date',
+  time: 'Time',
+  to: 'To',
+  from: 'From',
+  subject: 'Subject',
+  title: 'Title',
+  body: 'Body Text',
+  summary: 'Summary',
+  reportingOfficer: 'Reporting Officer',
+  location: 'Location',
+  actionTaken: 'Action Taken',
+  incidentNumber: 'Incident Number',
+  caseNumber: 'Case Number',
+  contact: 'Contact Details',
+  description: 'Description',
+  experimentId: 'Experiment ID',
+  leadResearcher: 'Lead Researcher',
+  clearance: 'Clearance Level',
+  observations: 'Observations',
+  warnings: 'Warnings',
+  status: 'Status',
+  assignedTo: 'Assigned To',
+  formNumber: 'Form Number',
+  subjectName: 'Subject Name',
+  dob: 'Date of Birth',
+  admittedBy: 'Admitted By',
+  reason: 'Reason',
+  authority: 'Issuing Authority',
+  reportCode: 'Report Code',
+  preparedBy: 'Prepared By'
+};
+
+const TEXTAREA_FIELDS = ['body','summary','observations','warnings','actionTaken','description','reason'];
+
+// ════════════════════════════════════════════════════
+//  DATA: FLAVOUR PACKS
+// ════════════════════════════════════════════════════
+const FLAVOURS = {
+  government: {
+    orgDefault: 'DEPARTMENT OF INTERNAL AFFAIRS',
+    deptDefault: 'Administrative Division',
+    refPrefix: 'GOV',
+    classWords: { confidential: 'OFFICIAL — SENSITIVE', secret: 'SECRET', internal: 'OFFICIAL', unclassified: 'UNCLASSIFIED' },
+    footerDefault: 'FORM GOV-117 REV.3'
+  },
+  academic: {
+    orgDefault: 'UNIVERSITY OF STRATHMORE',
+    deptDefault: 'Faculty of Applied Sciences',
+    refPrefix: 'ACAD',
+    classWords: { confidential: 'RESTRICTED — FACULTY ONLY', secret: 'CLASSIFIED', internal: 'INTERNAL CIRCULATION', unclassified: 'UNRESTRICTED' },
+    footerDefault: 'INTERNAL COMMUNICATION'
+  },
+  research: {
+    orgDefault: 'MERIDIAN RESEARCH INSTITUTE',
+    deptDefault: 'Containment & Analysis Division',
+    refPrefix: 'MRI',
+    classWords: { confidential: 'CONFIDENTIAL — LEVEL 3', secret: 'EYES ONLY — LEVEL 5', internal: 'INTERNAL — LEVEL 1', unclassified: 'UNCLASSIFIED' },
+    footerDefault: 'DOCUMENT CONTROL — DO NOT DUPLICATE'
+  },
+  police: {
+    orgDefault: 'METROPOLITAN POLICE SERVICE',
+    deptDefault: 'Criminal Investigations Division',
+    refPrefix: 'CID',
+    classWords: { confidential: 'RESTRICTED — LAW ENFORCEMENT', secret: 'SECRET', internal: 'OFFICIAL — POLICE USE', unclassified: 'UNRESTRICTED' },
+    footerDefault: 'EVIDENCE HANDLING PROTOCOL APPLIES'
+  },
+  medical: {
+    orgDefault: 'ST. BARTHOLOMEW\'S HOSPITAL',
+    deptDefault: 'Department of Psychiatry',
+    refPrefix: 'MED',
+    classWords: { confidential: 'CONFIDENTIAL — PATIENT DATA', secret: 'RESTRICTED — CLINICAL REVIEW', internal: 'INTERNAL — STAFF ONLY', unclassified: 'UNCLASSIFIED' },
+    footerDefault: 'PATIENT CONFIDENTIALITY APPLIES'
+  },
+  corporate: {
+    orgDefault: 'ALDERMAN & GREY PLC',
+    deptDefault: 'Office of the General Counsel',
+    refPrefix: 'AG',
+    classWords: { confidential: 'CONFIDENTIAL — PRIVILEGED', secret: 'STRICTLY CONFIDENTIAL', internal: 'INTERNAL USE ONLY', unclassified: 'PUBLIC' },
+    footerDefault: 'PRIVILEGED & CONFIDENTIAL'
+  },
+  occult: {
+    orgDefault: 'THE ATHENÆUM SOCIETY',
+    deptDefault: 'Department of Unnatural Philosophy',
+    refPrefix: 'ATH',
+    classWords: { confidential: 'SUB ROSA', secret: 'ARCANUM — DO NOT TRANSCRIBE', internal: 'RESTRICTED — INITIATES ONLY', unclassified: 'OPEN CIRCULATION' },
+    footerDefault: 'ARCHIVE COPY — SEVENTH SEAL'
+  },
+  retro: {
+    orgDefault: 'CENTRAL COMPUTING BUREAU',
+    deptDefault: 'TERMINAL OUTPUT DIVISION',
+    refPrefix: 'CCB',
+    classWords: { confidential: '*** CONFIDENTIAL ***', secret: '*** TOP SECRET ***', internal: '*** INTERNAL ***', unclassified: '*** UNCLASSIFIED ***' },
+    footerDefault: '>> END OF FILE <<'
+  }
+};
+
+const PAPER_TONES = [
+  { id: 'white', color: '#f8f6f1', label: 'White' },
+  { id: 'cream', color: '#f0e8d5', label: 'Cream' },
+  { id: 'aged', color: '#e8dcc4', label: 'Aged' },
+  { id: 'yellow', color: '#f5eec8', label: 'Yellow' },
+  { id: 'grey', color: '#e0ddd8', label: 'Grey' },
+  { id: 'blue', color: '#dce4ec', label: 'Blue' }
+];
+
+const INK_TONES = [
+  { id: 'black', color: '#1a1a1a', label: 'Black' },
+  { id: 'dark', color: '#2c2c2c', label: 'Dark' },
+  { id: 'faded', color: '#4a4a4a', label: 'Faded' },
+  { id: 'blue', color: '#1a2a4a', label: 'Blue' },
+  { id: 'sepia', color: '#4a3520', label: 'Sepia' }
+];
+
+const STAMPS = ['Approved','Denied','Confidential','Internal','Archived','Redacted','Evidence','Copy','Draft'];
+const STAMP_COLORS = [
+  { id: 'default', color: 'transparent', label: 'Default' },
+  { id: 'red', color: '#b40000', label: 'Red' },
+  { id: 'blue', color: '#000096', label: 'Blue' },
+  { id: 'black', color: '#222', label: 'Black' },
+  { id: 'faded', color: '#8a7050', label: 'Faded' }
+];
+
+// ════════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════════
+let state = {
+  template: 'memo',
+  flavour: 'government',
+  fields: {},
+  classification: 'none',
+  paper: 'cream',
+  ink: 'black',
+  density: 'normal',
+  headerAlign: 'center',
+  border: 'none',
+  pageWear: 0,
+  photoNoise: 0,
+  stamps: [],
+  stampColor: 'default',
+  showSignature: false,
+  showPhoto: false,
+  showRedaction: true,
+  footerLeft: '',
+  footerRight: '',
+  notes: '',
+  attachments: ''
+};
+
+// ════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════
+function init() {
+  buildTemplateGrid();
+  buildSwatches();
+  buildStampGrid();
+  buildStampColorSwatches();
+  setTemplate('memo');
+  applyFlavourDefaults();
+  updatePreview();
+}
+
+function buildTemplateGrid() {
+  const g = document.getElementById('templateGrid');
+  g.innerHTML = '';
+  for (const [id, t] of Object.entries(TEMPLATES)) {
+    const d = document.createElement('div');
+    d.className = 'template-card' + (state.template === id ? ' active' : '');
+    d.dataset.id = id;
+    d.innerHTML = `<div class="tc-icon">${t.icon}</div>${t.name}`;
+    d.onclick = () => setTemplate(id);
+    g.appendChild(d);
+  }
+}
+
+function buildSwatches() {
+  const ps = document.getElementById('paperSwatches');
+  ps.innerHTML = '';
+  PAPER_TONES.forEach(p => {
+    const s = document.createElement('div');
+    s.className = 'swatch' + (state.paper === p.id ? ' active' : '');
+    s.style.background = p.color;
+    s.title = p.label;
+    s.onclick = () => { state.paper = p.id; buildSwatches(); updatePreview(); };
+    ps.appendChild(s);
+  });
+
+  const is = document.getElementById('inkSwatches');
+  is.innerHTML = '';
+  INK_TONES.forEach(p => {
+    const s = document.createElement('div');
+    s.className = 'swatch' + (state.ink === p.id ? ' active' : '');
+    s.style.background = p.color;
+    s.title = p.label;
+    s.onclick = () => { state.ink = p.id; buildSwatches(); updatePreview(); };
+    is.appendChild(s);
+  });
+}
+
+function buildStampGrid() {
+  const g = document.getElementById('stampGrid');
+  g.innerHTML = '';
+  STAMPS.forEach(s => {
+    const c = document.createElement('div');
+    c.className = 'stamp-chip' + (state.stamps.includes(s.toLowerCase()) ? ' active' : '');
+    c.textContent = s;
+    c.onclick = () => {
+      const id = s.toLowerCase();
+      if (state.stamps.includes(id)) state.stamps = state.stamps.filter(x => x !== id);
+      else state.stamps.push(id);
+      buildStampGrid();
+      updatePreview();
+    };
+    g.appendChild(c);
+  });
+}
+
+function buildStampColorSwatches() {
+  const sc = document.getElementById('stampColorSwatches');
+  sc.innerHTML = '';
+  STAMP_COLORS.forEach(c => {
+    const s = document.createElement('div');
+    s.className = 'swatch' + (state.stampColor === c.id ? ' active' : '');
+    s.style.background = c.color === 'transparent' ? 'linear-gradient(135deg,#666 25%,#444 75%)' : c.color;
+    s.title = c.label;
+    s.onclick = () => { state.stampColor = c.id; buildStampColorSwatches(); updatePreview(); };
+    sc.appendChild(s);
+  });
+}
+
+// ════════════════════════════════════════════════════
+//  TEMPLATE SWITCHING
+// ════════════════════════════════════════════════════
+function setTemplate(id) {
+  state.template = id;
+  // Update grid
+  document.querySelectorAll('.template-card').forEach(c => {
+    c.classList.toggle('active', c.dataset.id === id);
+  });
+  buildContentFields();
+  applyFlavourDefaults();
+  updatePreview();
+}
+
+function buildContentFields() {
+  const container = document.getElementById('contentFields');
+  container.innerHTML = '';
+  const t = TEMPLATES[state.template];
+  t.fields.forEach(fid => {
+    const div = document.createElement('div');
+    div.className = 'field';
+    const label = FIELD_LABELS[fid] || fid;
+    if (TEXTAREA_FIELDS.includes(fid)) {
+      div.innerHTML = `<label>${label}</label><textarea id="field_${fid}" rows="4" oninput="syncField('${fid}')" placeholder="${label}...">${state.fields[fid] || ''}</textarea>`;
+    } else {
+      div.innerHTML = `<label>${label}</label><input type="text" id="field_${fid}" oninput="syncField('${fid}')" value="${state.fields[fid] || ''}" placeholder="${label}...">`;
+    }
+    container.appendChild(div);
+  });
+}
+
+function syncField(fid) {
+  const el = document.getElementById('field_' + fid);
+  if (el) {
+    state.fields[fid] = el.value;
+    updatePreview();
+  }
+}
+
+function applyFlavourDefaults() {
+  const f = FLAVOURS[state.flavour];
+  if (!state.fields.organisation) {
+    state.fields.organisation = f.orgDefault;
+    const el = document.getElementById('field_organisation');
+    if (el) el.value = f.orgDefault;
+  }
+  if (!state.fields.department) {
+    state.fields.department = f.deptDefault;
+    const el = document.getElementById('field_department');
+    if (el) el.value = f.deptDefault;
+  }
+  if (!state.footerLeft) {
+    state.footerLeft = f.footerDefault;
+    document.getElementById('footerLeft').value = f.footerDefault;
+  }
+}
+
+// ════════════════════════════════════════════════════
+//  PREVIEW RENDERING
+// ════════════════════════════════════════════════════
+function updatePreview() {
+  // Sync UI state
+  state.flavour = document.getElementById('flavourSelect').value;
+  state.classification = document.getElementById('classificationSelect').value;
+  state.density = document.getElementById('densitySelect').value;
+  state.headerAlign = document.getElementById('headerAlign').value;
+  state.border = document.getElementById('borderStyle').value;
+  state.pageWear = parseInt(document.getElementById('pageWear').value);
+  state.photoNoise = parseInt(document.getElementById('photoNoise').value);
+  state.showSignature = document.getElementById('sigToggle').classList.contains('active');
+  state.showPhoto = document.getElementById('photoToggle').classList.contains('active');
+  state.showRedaction = document.getElementById('redactionToggle').classList.contains('active');
+  state.footerLeft = document.getElementById('footerLeft').value;
+  state.footerRight = document.getElementById('footerRight').value;
+  state.notes = document.getElementById('docNotes').value;
+  state.attachments = document.getElementById('docAttachments').value;
+
+  document.getElementById('pageWearVal').textContent = state.pageWear;
+  document.getElementById('photoNoiseVal').textContent = state.photoNoise;
+
+  const f = state.fields;
+  const flav = FLAVOURS[state.flavour];
+  const tmpl = TEMPLATES[state.template];
+
+  // Build HTML
+  let html = '';
+
+  // Page classes
+  const pageClasses = [
+    'doc-page',
+    `paper-${state.paper}`,
+    `ink-${state.ink}`
+  ];
+
+  // Wrapper classes
+  const wrapperClasses = [
+    `flavour-${state.flavour}`,
+    `density-${state.density}`,
+    `border-${state.border}`
+  ];
+  if (tmpl.layout === 'bulletin') wrapperClasses.push('layout-bulletin');
+
+  // Classification
+  let classHtml = '';
+  if (state.classification !== 'none') {
+    const word = flav.classWords[state.classification] || state.classification.toUpperCase();
+    classHtml = `<div class="doc-classification cls-${state.classification}">${word}</div>`;
+  }
+
+  // Header
+  let headerHtml = '';
+  if (tmpl.layout === 'memo') {
+    headerHtml = `<div class="doc-header align-${state.headerAlign}">
+      <div class="doc-org-name">${esc(f.organisation || '')}</div>
+      <div class="doc-dept">${esc(f.department || '')}</div>
+    </div>
+    <div class="memo-header">
+      <div class="memo-row"><span class="memo-label">To:</span><span>${esc(f.to || '')}</span></div>
+      <div class="memo-row"><span class="memo-label">From:</span><span>${esc(f.from || '')}</span></div>
+      <div class="memo-row"><span class="memo-label">Date:</span><span>${esc(f.date || '')}</span></div>
+      <div class="memo-row"><span class="memo-label">Re:</span><span>${esc(f.subject || '')}</span></div>
+      ${f.docRef ? `<div class="memo-row"><span class="memo-label">Ref:</span><span>${esc(f.docRef)}</span></div>` : ''}
+    </div>`;
+  } else if (tmpl.layout === 'bulletin') {
+    headerHtml = `<div class="doc-header align-center">
+      <div class="doc-org-name">${esc(f.organisation || '')}</div>
+      <div class="doc-title" style="font-size:28px;letter-spacing:4px;margin-top:12px">${esc(f.title || 'MISSING PERSON')}</div>
+      ${f.caseNumber ? `<div style="font-size:11px;margin-top:6px;opacity:0.6">CASE NO. ${esc(f.caseNumber)}</div>` : ''}
+      ${f.date ? `<div style="font-size:10px;opacity:0.5;margin-top:2px">${esc(f.date)}</div>` : ''}
+    </div>`;
+  } else {
+    // Standard header for report, notice, cover, form, briefing
+    const titleField = f.title || tmpl.name.toUpperCase();
+    headerHtml = `<div class="doc-header align-${state.headerAlign}">
+      <div class="doc-org-name">${esc(f.organisation || '')}</div>
+      ${f.department ? `<div class="doc-dept">${esc(f.department)}</div>` : ''}
+      ${f.facility ? `<div class="doc-dept">${esc(f.facility)}</div>` : ''}
+      <div class="doc-title">${esc(titleField)}</div>
+    </div>`;
+  }
+
+  // Metadata
+  let metaHtml = '';
+  const metaFields = [];
+
+  const metaMap = {
+    docRef: 'Reference',
+    reportCode: 'Report Code',
+    incidentNumber: 'Incident No.',
+    caseNumber: 'Case No.',
+    formNumber: 'Form No.',
+    experimentId: 'Experiment ID',
+    date: 'Date',
+    time: 'Time',
+    reportingOfficer: 'Reporting Officer',
+    leadResearcher: 'Lead Researcher',
+    preparedBy: 'Prepared By',
+    admittedBy: 'Admitted By',
+    assignedTo: 'Assigned To',
+    location: 'Location',
+    clearance: 'Clearance',
+    status: 'Status',
+    subjectName: 'Subject',
+    dob: 'Date of Birth',
+    contact: 'Contact',
+    authority: 'Authority'
+  };
+
+  // Only include non-empty meta not already in header
+  const headerUsed = tmpl.layout === 'memo'
+    ? ['organisation','department','to','from','date','subject','docRef']
+    : tmpl.layout === 'bulletin'
+      ? ['organisation','title','caseNumber','date']
+      : ['organisation','department','facility','title'];
+
+  for (const [fid, label] of Object.entries(metaMap)) {
+    if (f[fid] && !headerUsed.includes(fid) && tmpl.fields.includes(fid)) {
+      metaFields.push(`<span class="meta-label">${label}:</span><span class="meta-value">${esc(f[fid])}</span>`);
+    }
+  }
+
+  if (metaFields.length > 0) {
+    metaHtml = `<div class="doc-meta">${metaFields.join('')}</div>`;
+  }
+
+  // Photo placeholder
+  let photoHtml = '';
+  if (state.showPhoto) {
+    photoHtml = `<div class="doc-photo" style="${tmpl.layout==='bulletin'?'margin:10px auto':''}">PHOTO<br>PLACEHOLDER</div>`;
+  }
+
+  // Body
+  let bodyText = f.body || f.summary || '';
+  if (state.showRedaction) {
+    bodyText = processRedactions(bodyText);
+  } else {
+    bodyText = esc(bodyText);
+  }
+
+  // Extra fields as body sections
+  let extraSections = '';
+  if (f.observations && state.template === 'research') {
+    extraSections += `<div style="margin-top:12px"><strong style="font-size:10px;text-transform:uppercase;letter-spacing:1px;opacity:0.6">Observations:</strong><div style="margin-top:4px">${state.showRedaction ? processRedactions(f.observations) : esc(f.observations)}</div></div>`;
+  }
+  if (f.warnings && state.template === 'research') {
+    extraSections += `<div style="margin-top:12px;color:#8b0000"><strong style="font-size:10px;text-transform:uppercase;letter-spacing:1px">⚠ Warnings:</strong><div style="margin-top:4px">${esc(f.warnings)}</div></div>`;
+  }
+  if (f.actionTaken && state.template === 'incident') {
+    extraSections += `<div style="margin-top:12px"><strong style="font-size:10px;text-transform:uppercase;letter-spacing:1px;opacity:0.6">Action Taken:</strong><div style="margin-top:4px">${esc(f.actionTaken)}</div></div>`;
+  }
+  if (f.description && state.template === 'bulletin') {
+    extraSections += `<div style="margin-top:10px"><strong style="font-size:10px;text-transform:uppercase;letter-spacing:1px;opacity:0.6">Description:</strong><div style="margin-top:4px">${esc(f.description)}</div></div>`;
+  }
+  if (f.reason && state.template === 'intake') {
+    extraSections += `<div style="margin-top:12px"><strong style="font-size:10px;text-transform:uppercase;letter-spacing:1px;opacity:0.6">Reason for Intake:</strong><div style="margin-top:4px">${state.showRedaction ? processRedactions(f.reason) : esc(f.reason)}</div></div>`;
+  }
+
+  // Notes
+  let notesHtml = '';
+  if (state.notes) {
+    notesHtml = `<div style="margin-top:14px;padding:8px;border-left:3px solid rgba(0,0,0,0.2);font-size:11px;font-style:italic;opacity:0.7">${esc(state.notes)}</div>`;
+  }
+
+  // Attachments
+  let attHtml = '';
+  if (state.attachments) {
+    attHtml = `<div class="doc-attachments"><div class="att-title">Attachments</div>${esc(state.attachments)}</div>`;
+  }
+
+  // Signature
+  let sigHtml = '';
+  if (state.showSignature) {
+    sigHtml = `<div class="doc-signature">
+      <div class="sig-line">Signature</div>
+      <div style="margin-top:16px" class="sig-line">Date</div>
+    </div>`;
+  }
+
+  // Footer
+  const fleft = state.footerLeft || flav.footerDefault;
+  const fright = state.footerRight || '';
+  const footerHtml = `<div class="doc-footer"><span>${esc(fleft)}</span><span>${esc(fright)}</span></div>`;
+
+  // Stamps
+  let stampHtml = '';
+  state.stamps.forEach(s => {
+    const colorClass = state.stampColor !== 'default' ? ` stamp-color-${state.stampColor}` : '';
+    stampHtml += `<div class="stamp-overlay stamp-${s}${colorClass}">${s}</div>`;
+  });
+
+  // Page wear
+  const wearStyle = state.pageWear > 0 ? `opacity: ${state.pageWear / 100}` : '';
+  const noiseStyle = state.photoNoise > 0 ? `opacity: ${state.photoNoise / 100}` : '';
+
+  // Assemble
+  html = `<div class="${wrapperClasses.join(' ')}">
+    <div class="${pageClasses.join(' ')}">
+      <div class="page-wear ${state.pageWear > 0 ? 'active' : ''}" style="${wearStyle}"></div>
+      <div class="photocopy-noise" style="${noiseStyle}"></div>
+      <div class="doc-content">
+        ${classHtml}
+        ${headerHtml}
+        ${metaHtml}
+        ${photoHtml}
+        <div class="doc-body">${bodyText}</div>
+        ${extraSections}
+        ${notesHtml}
+        ${attHtml}
+        ${sigHtml}
+      </div>
+      ${footerHtml}
+      ${stampHtml}
+    </div>
+  </div>`;
+
+  document.getElementById('docPreview').innerHTML = html;
+}
+
+function esc(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function processRedactions(text) {
+  // Handle [R]...[/R] blocks
+  let processed = text.replace(/\[R\]([\s\S]*?)\[\/R\]/gi, (_, content) => {
+    return `<span class="redacted-block">${esc(content)}</span>`;
+  });
+  // Handle [REDACTED] markers
+  processed = processed.replace(/\[REDACTED\]/gi, '<span class="redacted-block">&nbsp;&nbsp;REDACTED&nbsp;&nbsp;</span>');
+  // Escape remaining but preserve our spans
+  const parts = processed.split(/(<span class="redacted-block">.*?<\/span>)/g);
+  return parts.map(p => p.startsWith('<span') ? p : esc(p)).join('');
+}
+
+// ════════════════════════════════════════════════════
+//  UI HELPERS
+// ════════════════════════════════════════════════════
+function toggleSwitch(el) {
+  el.classList.toggle('active');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ════════════════════════════════════════════════════
+//  SAVE / LOAD
+// ════════════════════════════════════════════════════
+function gatherState() {
+  // Make sure fields are synced
+  const t = TEMPLATES[state.template];
+  t.fields.forEach(fid => {
+    const el = document.getElementById('field_' + fid);
+    if (el) state.fields[fid] = el.value;
+  });
+  return JSON.parse(JSON.stringify(state));
+}
+
+function openSaveModal() {
+  document.getElementById('saveDocName').value = state.fields.title || state.fields.subject || 'Untitled Document';
+  document.getElementById('saveModal').classList.remove('hidden');
+}
+function closeSaveModal() { document.getElementById('saveModal').classList.add('hidden'); }
+
+function saveDoc() {
+  const name = document.getElementById('saveDocName').value || 'Untitled';
+  const saves = JSON.parse(localStorage.getItem('bdf_docs') || '[]');
+  saves.push({ name, date: new Date().toISOString(), state: gatherState() });
+  localStorage.setItem('bdf_docs', JSON.stringify(saves));
+  closeSaveModal();
+  showToast('Document saved: ' + name);
+}
+
+function openLoadModal() {
+  const saves = JSON.parse(localStorage.getItem('bdf_docs') || '[]');
+  const list = document.getElementById('loadList');
+  if (saves.length === 0) {
+    list.innerHTML = '<p style="font-size:12px;color:var(--ui-text-dim)">No saved documents.</p>';
+  } else {
+    list.innerHTML = saves.map((s, i) => `
+      <div class="save-item" onclick="loadDoc(${i})">
+        <div>
+          <div class="si-name">${esc(s.name)}</div>
+          <div class="si-meta">${new Date(s.date).toLocaleDateString()}</div>
+        </div>
+        <div class="si-actions">
+          <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();deleteDoc(${i})">✕</button>
+        </div>
+      </div>
+    `).join('');
+  }
+  document.getElementById('loadModal').classList.remove('hidden');
+}
+function closeLoadModal() { document.getElementById('loadModal').classList.add('hidden'); }
+
+function loadDoc(idx) {
+  const saves = JSON.parse(localStorage.getItem('bdf_docs') || '[]');
+  if (!saves[idx]) return;
+  const s = saves[idx].state;
+  Object.assign(state, s);
+  // Restore UI
+  document.getElementById('flavourSelect').value = state.flavour;
+  document.getElementById('classificationSelect').value = state.classification;
+  document.getElementById('densitySelect').value = state.density;
+  document.getElementById('headerAlign').value = state.headerAlign;
+  document.getElementById('borderStyle').value = state.border;
+  document.getElementById('pageWear').value = state.pageWear;
+  document.getElementById('photoNoise').value = state.photoNoise;
+  document.getElementById('footerLeft').value = state.footerLeft;
+  document.getElementById('footerRight').value = state.footerRight;
+  document.getElementById('docNotes').value = state.notes;
+  document.getElementById('docAttachments').value = state.attachments;
+
+  const sigT = document.getElementById('sigToggle');
+  sigT.classList.toggle('active', state.showSignature);
+  const phT = document.getElementById('photoToggle');
+  phT.classList.toggle('active', state.showPhoto);
+  const rdT = document.getElementById('redactionToggle');
+  rdT.classList.toggle('active', state.showRedaction);
+
+  buildSwatches();
+  buildStampGrid();
+  buildStampColorSwatches();
+
+  // Set template and rebuild fields
+  document.querySelectorAll('.template-card').forEach(c => {
+    c.classList.toggle('active', c.dataset.id === state.template);
+  });
+  buildContentFields();
+  // Fill in field values
+  TEMPLATES[state.template].fields.forEach(fid => {
+    const el = document.getElementById('field_' + fid);
+    if (el && state.fields[fid]) el.value = state.fields[fid];
+  });
+
+  updatePreview();
+  closeLoadModal();
+  showToast('Document loaded');
+}
+
+function deleteDoc(idx) {
+  const saves = JSON.parse(localStorage.getItem('bdf_docs') || '[]');
+  saves.splice(idx, 1);
+  localStorage.setItem('bdf_docs', JSON.stringify(saves));
+  openLoadModal();
+  showToast('Document deleted');
+}
+
+function resetDoc() {
+  state = {
+    template: 'memo', flavour: 'government', fields: {}, classification: 'none',
+    paper: 'cream', ink: 'black', density: 'normal', headerAlign: 'center',
+    border: 'none', pageWear: 0, photoNoise: 0, stamps: [], stampColor: 'default',
+    showSignature: false, showPhoto: false, showRedaction: true,
+    footerLeft: '', footerRight: '', notes: '', attachments: ''
+  };
+  document.getElementById('flavourSelect').value = 'government';
+  document.getElementById('classificationSelect').value = 'none';
+  document.getElementById('densitySelect').value = 'normal';
+  document.getElementById('headerAlign').value = 'center';
+  document.getElementById('borderStyle').value = 'none';
+  document.getElementById('pageWear').value = 0;
+  document.getElementById('photoNoise').value = 0;
+  document.getElementById('footerLeft').value = '';
+  document.getElementById('footerRight').value = '';
+  document.getElementById('docNotes').value = '';
+  document.getElementById('docAttachments').value = '';
+  document.getElementById('sigToggle').classList.remove('active');
+  document.getElementById('photoToggle').classList.remove('active');
+  document.getElementById('redactionToggle').classList.add('active');
+  buildSwatches();
+  buildStampGrid();
+  buildStampColorSwatches();
+  setTemplate('memo');
+  showToast('New document');
+}
+
+// ════════════════════════════════════════════════════
+//  PRESETS
+// ════════════════════════════════════════════════════
+function savePreset() {
+  const name = prompt('Preset name:');
+  if (!name) return;
+  const presets = JSON.parse(localStorage.getItem('bdf_presets') || '[]');
+  const preset = {
+    name,
+    template: state.template,
+    flavour: state.flavour,
+    paper: state.paper,
+    ink: state.ink,
+    density: state.density,
+    headerAlign: state.headerAlign,
+    border: state.border,
+    pageWear: state.pageWear,
+    photoNoise: state.photoNoise,
+    stamps: [...state.stamps],
+    stampColor: state.stampColor,
+    classification: state.classification,
+    showSignature: state.showSignature,
+    showPhoto: state.showPhoto
+  };
+  presets.push(preset);
+  localStorage.setItem('bdf_presets', JSON.stringify(presets));
+  showToast('Preset saved: ' + name);
+}
+
+function openPresetModal() {
+  const presets = JSON.parse(localStorage.getItem('bdf_presets') || '[]');
+  const list = document.getElementById('presetList');
+  if (presets.length === 0) {
+    list.innerHTML = '<p style="font-size:12px;color:var(--ui-text-dim)">No saved presets.</p>';
+  } else {
+    list.innerHTML = presets.map((p, i) => `
+      <div class="save-item" onclick="loadPreset(${i})">
+        <div>
+          <div class="si-name">${esc(p.name)}</div>
+          <div class="si-meta">${p.template} · ${p.flavour}</div>
+        </div>
+        <div class="si-actions">
+          <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();deletePreset(${i})">✕</button>
+        </div>
+      </div>
+    `).join('');
+  }
+  document.getElementById('presetModal').classList.remove('hidden');
+}
+function closePresetModal() { document.getElementById('presetModal').classList.add('hidden'); }
+
+function loadPreset(idx) {
+  const presets = JSON.parse(localStorage.getItem('bdf_presets') || '[]');
+  if (!presets[idx]) return;
+  const p = presets[idx];
+  // Apply style settings only, not content
+  state.template = p.template;
+  state.flavour = p.flavour;
+  state.paper = p.paper;
+  state.ink = p.ink;
+  state.density = p.density;
+  state.headerAlign = p.headerAlign;
+  state.border = p.border;
+  state.pageWear = p.pageWear;
+  state.photoNoise = p.photoNoise;
+  state.stamps = [...(p.stamps || [])];
+  state.stampColor = p.stampColor || 'default';
+  state.classification = p.classification;
+  state.showSignature = p.showSignature;
+  state.showPhoto = p.showPhoto;
+
+  // Update UI
+  document.getElementById('flavourSelect').value = state.flavour;
+  document.getElementById('classificationSelect').value = state.classification;
+  document.getElementById('densitySelect').value = state.density;
+  document.getElementById('headerAlign').value = state.headerAlign;
+  document.getElementById('borderStyle').value = state.border;
+  document.getElementById('pageWear').value = state.pageWear;
+  document.getElementById('photoNoise').value = state.photoNoise;
+  document.getElementById('sigToggle').classList.toggle('active', state.showSignature);
+  document.getElementById('photoToggle').classList.toggle('active', state.showPhoto);
+  buildSwatches();
+  buildStampGrid();
+  buildStampColorSwatches();
+  document.querySelectorAll('.template-card').forEach(c => {
+    c.classList.toggle('active', c.dataset.id === state.template);
+  });
+  buildContentFields();
+  TEMPLATES[state.template].fields.forEach(fid => {
+    const el = document.getElementById('field_' + fid);
+    if (el && state.fields[fid]) el.value = state.fields[fid];
+  });
+  updatePreview();
+  closePresetModal();
+  showToast('Preset applied: ' + p.name);
+}
+
+function deletePreset(idx) {
+  const presets = JSON.parse(localStorage.getItem('bdf_presets') || '[]');
+  presets.splice(idx, 1);
+  localStorage.setItem('bdf_presets', JSON.stringify(presets));
+  openPresetModal();
+}
+
+// ════════════════════════════════════════════════════
+//  EXPORT
+// ════════════════════════════════════════════════════
+function exportPrint() {
+  window.print();
+}
+
+function exportPNG() {
+  const preview = document.getElementById('docPreview');
+  // Use a canvas-based approach
+  showToast('Preparing PNG export...');
+
+  // Clone the preview content into a temporary container
+  const clone = preview.cloneNode(true);
+  clone.style.position = 'absolute';
+  clone.style.left = '-9999px';
+  clone.style.width = '210mm';
+  document.body.appendChild(clone);
+
+  // Use html2canvas-like approach via SVG foreignObject
+  const svgData = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="794" height="1123">
+      <foreignObject width="100%" height="100%">
+        <div xmlns="http://www.w3.org/1999/xhtml">
+          ${getExportStyles()}
+          ${clone.innerHTML}
+        </div>
+      </foreignObject>
+    </svg>`;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 794 * 2;
+  canvas.height = 1123 * 2;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(2, 2);
+
+  const img = new Image();
+  const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+
+  img.onload = () => {
+    ctx.drawImage(img, 0, 0);
+    URL.revokeObjectURL(url);
+    document.body.removeChild(clone);
+
+    const link = document.createElement('a');
+    link.download = (state.fields.title || state.fields.subject || 'document').replace(/\s+/g, '_') + '.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    showToast('PNG exported');
+  };
+
+  img.onerror = () => {
+    URL.revokeObjectURL(url);
+    document.body.removeChild(clone);
+    // Fallback: print
+    showToast('PNG export requires html2canvas. Use Print/PDF instead.');
+  };
+
+  img.src = url;
+}
+
+function getExportStyles() {
+  // Gather all stylesheet content for export
+  const sheets = document.querySelectorAll('style');
+  let css = '';
+  sheets.forEach(s => css += s.textContent);
+  return `<style>${css}</style>`;
+}
+
+// ════════════════════════════════════════════════════
+//  FLAVOUR CHANGE
+// ════════════════════════════════════════════════════
+document.getElementById('flavourSelect').addEventListener('change', () => {
+  const f = FLAVOURS[document.getElementById('flavourSelect').value];
+  // Reset org/dept to new flavour defaults
+  state.fields.organisation = f.orgDefault;
+  state.fields.department = f.deptDefault;
+  state.footerLeft = f.footerDefault;
+  document.getElementById('footerLeft').value = f.footerDefault;
+
+  const orgEl = document.getElementById('field_organisation');
+  const deptEl = document.getElementById('field_department');
+  if (orgEl) orgEl.value = f.orgDefault;
+  if (deptEl) deptEl.value = f.deptDefault;
+
+  updatePreview();
+});
+
+// ════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════
+init();
+</script>
+</body>
+</html>
